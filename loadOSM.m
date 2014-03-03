@@ -2,7 +2,7 @@ function [ nodeMap, wayMap ] = loadOSM( params )
 %LOADOSM Summary of this function goes here
 %   This is the function to load the osm file in params.
 
-if exist(params.cacheOSM)
+if exist(params.cacheOSM, 'file')
     load(params.cacheOSM);
     return
 end

@@ -4,7 +4,7 @@ function [ osmMat ] = rasterizeOSM( params )
 %   osmMat matrix.
 % osmMat = sparse(params.y-params.x+1, params.n-params.m+1);
 
-if exist(params.cacheOSMMat)
+if exist(params.cacheOSMMat, 'file')
     load(params.cacheOSMMat);
     return
 end

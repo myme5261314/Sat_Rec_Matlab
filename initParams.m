@@ -29,14 +29,20 @@ end
 
 params.z = 19;
 
+params.filegroup = 10000;
+
 % cache file
 if params.debug
     params.cacheOSM = 'E:/wuhan/cugOSM.mat';
     params.cacheOSMMat = 'E:/wuhan/cugOSMMat.mat';
+    params.cacheExtendOSM = 'E:/wuhan/cugExtendOSMMat.mat';
 else
     params.cacheOSM = 'E:/wuhan/wuhanOSM.mat';
     params.cacheOSMMat = 'E:/wuhan/wuhanOSMMat.mat';
+    params.cacheExtendOSM = 'E:/wuhan/wuhanExtendOSMMat.mat';
 end
+
+params.threshold = 1e-4;
 
 % % set the data split to train and test on 
 % params.split = 2;
