@@ -43,6 +43,19 @@ else
 end
 
 params.threshold = 1e-4;
+% The image size with same width and height.
+params.imgSize = 256;
+
+% x,y stands for the min-max lontitude pixel(column) and m,n stands for
+% the min-max latitude pixel(row).
+[params.x, params.m] = latlon2p(params.lat_north, params.lon_west,params.z);
+[params.y, params.n] = latlon2p(params.lat_south, params.lon_east,params.z);
+% To let the area pixel coordinate start with the multiple of imgSize
+% index.
+params.x = params.x + (params.imgSize - mod(params.x, params.imgSize));
+params.m = params.m + (params.imgSize - mod(params.m, params.imgSize));
+params.y = params.y - mod(params.y, params.imgSize);
+params.n = params.n - mod(params.n, params.imgSize);
 
 % % set the data split to train and test on 
 % params.split = 2;

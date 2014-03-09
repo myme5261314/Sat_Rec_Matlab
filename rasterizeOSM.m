@@ -75,21 +75,6 @@ function indList = rasterizeLine(ref1, ref2,params)
                      [rasterMatrix(1,:)+1; rasterMatrix(2,:)+1] ...,
                    ];
     indList = rasterMatrix;
-    
-%     for i=1:size(rasterMatrix,2)
-%         x = rasterMatrix(1,i);
-%         y = rasterMatrix(2,i);
-%         x_ = ceil(x);
-%         y_ = ceil(y);
-%         if x_>0 && y_>0
-%             xrange = x_:x_+1;
-%             yrange = y_:y_+1;
-%             xymat = [ [xrange;yrange], [xrange;fliplr(yrange)] ];
-%             indList = [indList xymat];
-% %             params.osmMat(x_:x_+1,y_:y_+1) = 1;
-% %             find(params.osmMat)
-%         end
-%     end
 end
 
 function result = inArea(node, params)
