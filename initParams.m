@@ -57,6 +57,9 @@ params.m = params.m + (params.imgSize - mod(params.m, params.imgSize));
 params.y = params.y - mod(params.y, params.imgSize);
 params.n = params.n - mod(params.n, params.imgSize);
 
+params.numRows = params.n - params.m;
+params.numColumns = params.y - params.x;
+
 % % set the data split to train and test on 
 % params.split = 2;
 % 

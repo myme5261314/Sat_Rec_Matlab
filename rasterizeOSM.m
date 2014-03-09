@@ -9,6 +9,24 @@ if exist(params.cacheOSMMat, 'file')
     return
 end
 
+numColumns = params.y - params.x;
+numRows = params.n - params.m;
+% m x-----y
+% |
+% n
+if ~exist('OSMMat.dat', 'file')
+    fId = fopen('OSMMat.dat','w');
+    for colNum = 1:numColumns
+        column = zeros(numRows, 1);
+        fwrite(fId,column,'double');
+    end
+    fclose(fId);
+end
+
+memMat = memmapfile('OSMMat.dat', 'format', {'double', [numRows numColumns], 'mat' });
+memMat.Writable = true;
+
+
 ks = cell2mat(keys(params.wayMap));
 indList = [];
 count = 0;
@@ -30,7 +48,9 @@ indList = unique(indList','rows')';
 % osmMat = sparse(indList(1,:), indList(2,:),1, params.y-params.x+1, params.n-params.m+1);
 % Because the OSM's xy coordinate is different from the matlab's
 % row/column coordinate.
-osmMat = sparse(indList(2,:), indList(1,:),1, params.n-params.m+1, params.y-params.x+1);
+osmMat = sparse(indList(2,:), indList(1,:),1, params.numRows, params.numColumns);
+idxList = sub2ind([numRows numColumns], indList(2,:), indList(1,:));
+memMat.Data.mat(idxList) = 1;
 
 save(params.cacheOSMMat,'osmMat');
 % osmMat(indList) = 1;
@@ -58,22 +78,28 @@ function indList = rasterizeLine(ref1, ref2,params)
     [x1, y1] = latlon2p(node1(1),node1(2),params.z);
     [x2, y2] = latlon2p(node2(1),node2(2),params.z);
     % transform to coorespending coordinates.
-    x1 = ceil(x1 - params.x + 1);
-    x2 = ceil(x2 - params.x + 1);
-    y1 = y1 - params.m + 1;
-    y2 = y2 - params.m + 1;
+    x1 = round(x1 - params.x);
+    x2 = round(x2 - params.x);
+    y1 = round(y1 - params.m);
+    y2 = round(y2 - params.m);
     rasterPoint = abs(x2-x1) + 1;
     rasterMatrix = [linspace(x1,x2,rasterPoint); linspace(y1,y2,rasterPoint)];
     
-    rasterMatrix = ceil(rasterMatrix);
-    [~, col] = find(rasterMatrix<=0);
-    col = unique(col);
-    rasterMatrix(:,col) = [];
+    rasterMatrix = round(rasterMatrix);
+    
     rasterMatrix = [ [rasterMatrix(1,:); rasterMatrix(2,:)] ...,
                      [rasterMatrix(1,:); rasterMatrix(2,:)+1] ...,
                      [rasterMatrix(1,:)+1; rasterMatrix(2,:)] ...,
                      [rasterMatrix(1,:)+1; rasterMatrix(2,:)+1] ...,
                    ];
+    % clear the point is out of range.
+    [~, col] = find(rasterMatrix<=0);
+    col = unique(col);
+    rasterMatrix(:,col) = [];
+    col = rasterMatrix(1,:) > params.numColumns;
+    rasterMatrix(:,col) = [];
+    col = rasterMatrix(2,:) > params.numRows;
+    rasterMatrix(:,col) = [];
     indList = rasterMatrix;
 end
 
