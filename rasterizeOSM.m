@@ -27,7 +27,10 @@ for id=ks(1,:)
 end
 indList = unique(indList','rows')';
 % [row, col] = ind2sub([params.y-params.x+1, params.n-params.m+1], indList);
-osmMat = sparse(indList(1,:), indList(2,:),1, params.y-params.x+1, params.n-params.m+1);
+% osmMat = sparse(indList(1,:), indList(2,:),1, params.y-params.x+1, params.n-params.m+1);
+% Because the OSM's xy coordinate is different from the matlab's
+% row/column coordinate.
+osmMat = sparse(indList(2,:), indList(1,:),1, params.n-params.m+1, params.y-params.x+1);
 
 save(params.cacheOSMMat,'osmMat');
 % osmMat(indList) = 1;

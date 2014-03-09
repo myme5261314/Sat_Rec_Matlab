@@ -32,30 +32,40 @@ extendMat = extendOSM(params);
 params.osmMat = extendMat;
 
 imgSize = 1024;
-% xrange = randi([1 floor((params.y-params.x)/256)], 100000, 1)*256;
-% yrange = randi([1 floor((params.n-params.m)/256)], 100000, 1)*256;
-% for i = 1:100000
-%     tempMat = params.osmMat(xrange(i):xrange(i)+imgSize-1, yrange(i):yrange(i)+imgSize-1);
-%     per = find(tempMat>0.1)/prod(size(tempMat));
-%     if per > 0.2
-%         x = xrange(i);
-%         y = yrange(i);
-%         x
-%         y
-%         figure(1);
-%         imshow(floor(full(tempMat)*255));
-%         figure(2);
-%         imshow(getImgMat(x,y,[imgSize imgSize],params));
-%         break;
-%     end
-% end
-x = 18944+1;
-y = 25088+2;
-tempMat = params.osmMat(x:x+imgSize-1, y:y+imgSize-1);
-figure(1);
-imshow(floor(full(tempMat)*255));
-figure(2);
-imshow(flipdim(imrotate(getImgMat(x,y,[imgSize imgSize],params), -90), 2));
+xrange = randi([1 floor((params.y-params.x-imgSize)/256)], 100000, 1)*256;
+yrange = randi([1 floor((params.n-params.m-imgSize)/256)], 100000, 1)*256;
+count = 0;
+for i = 1:100000
+    tempMat = params.osmMat(yrange(i):yrange(i)+imgSize-1, xrange(i):xrange(i)+imgSize-1);
+    per = numel(find(tempMat))/numel(tempMat);
+    if per > 0.5
+        x = xrange(i);
+        y = yrange(i);
+        x
+        y
+        count = count + 1;
+        figure(1);
+        subplot(2,4,count*2-1);
+        imshow(round(full(tempMat)*255),[0 255]);
+%         extendMat = full(tempMat);
+        subplot(2,4,count*2);
+        imshow(getImgMat(x,y,[imgSize imgSize],params));
+        if count == 4
+            break;
+        end
+    end
+end
+% x = 18944+1;
+% y = 25088+2;
+% x = 9472 + 1;
+% y = 16896 + 2;
+% tempMat = params.osmMat(y:y+imgSize-1, x:x+imgSize-1);
+% figure(1);
+% subplot(1,2,1);
+% imshow(full(tempMat));
+% extendMat = full(tempMat);
+% subplot(1,2,2);
+% imshow(getImgMat(x,y,[imgSize imgSize],params));
 
 
 disp(params);

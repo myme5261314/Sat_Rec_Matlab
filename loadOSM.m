@@ -25,6 +25,9 @@ for i=0:ways.getLength()-1
     way_id = str2double(ways.item(i).getAttribute('id'));
     way_id = int64(way_id);
     nodelist = ways.item(i).getChildNodes();
+    if ~isWay(nodelist)
+        continue;
+    end
     reflist = [];
     for j=0:nodelist.getLength()-1
         if strcmp(nodelist.item(j).getNodeName(),'nd')
@@ -36,6 +39,19 @@ end
 
 save(params.cacheOSM, 'nodeMap', 'wayMap');
 
+
+end
+
+function result = isWay(nodelist)
+result = false;
+for i = 0:nodelist.getLength()-1
+    if strcmp(nodelist.item(i).getNodeName(),'tag')
+        if strcmp(nodelist.item(i).getAttribute('k'), 'highway')
+            result = true;
+            return;
+        end
+    end
+end
 
 end
 
