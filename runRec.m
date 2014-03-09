@@ -13,7 +13,8 @@ osmMat = rasterizeOSM(params);
 params.osmMat = osmMat;
 
 extendMat = extendOSM(params);
-params.osmMat = extendMat;
+params.osmMat = extendMat.Data.mat;
+% params.osmMat = extendMat;
 
 imgSize = 1024;
 xrange = randi([1 floor((params.y-params.x-imgSize)/256)], 100000, 1)*256;
