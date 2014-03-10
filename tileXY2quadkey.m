@@ -8,7 +8,7 @@ if nargin<3
     Z = 19;
 end
 quadkey = '';
-for i=[Z:-1:1]
+for i=Z:-1:1
     digit = 0;
     mask = bitshift(1, i-1);
     if(bitand(X, mask)) ~= 0
@@ -17,7 +17,9 @@ for i=[Z:-1:1]
     if(bitand(Y, mask)) ~= 0
         digit = digit + 2;
     end
-    quadkey = strcat(quadkey, num2str(digit));
+%     This line of the code runs too slow than the below one
+%     quadkey1 = strcat(quadkey, num2str(digit));
+    quadkey = sprintf('%s%d',quadkey, digit);
 end
 
 
