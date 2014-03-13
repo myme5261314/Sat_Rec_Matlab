@@ -59,10 +59,10 @@ save(params.cacheOSMMat,'osmMat');
 end
 
 function indList = rasterizeLine(ref1, ref2,params)
+    indList = [];
     if ~all((isKey(params.nodeMap,{ref1, ref2})))
         return
     end
-    indList = [];
     node1 = params.nodeMap(ref1);
     node2 = params.nodeMap(ref2);
     if not (inArea(node1,params) && inArea(node2,params))

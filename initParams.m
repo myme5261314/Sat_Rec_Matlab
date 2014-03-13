@@ -9,23 +9,26 @@ params.dataFolder = 'E:/wuhan/';
 
 % The Whole OSM file
 if params.debug
-    params.osmFile = 'E:/wuhan/cug.osm';
+%     params.osmFile = 'E:/wuhan/cug.osm';
+    params.osmFile = 'E:/wuhan/hust.osm';
 else
     params.osmFile = 'E:/wuhan/wuhan.osm';
 end
 
 % The whole OSM area
-if params.debug
-    params.lat_south = 30.4969053;
-    params.lat_north = 30.562261;
-    params.lon_west = 114.3463898;
-    params.lon_east = 114.4294739;
-else
-    params.lat_south = 29.9828;
-    params.lat_north = 31.3703;
-    params.lon_west = 113.6994;
-    params.lon_east = 115.0869;
-end
+% if params.debug
+%     params.lat_south = 30.4969053;
+%     params.lat_north = 30.562261;
+%     params.lon_west = 114.3463898;
+%     params.lon_east = 114.4294739;
+% else
+%     params.lat_south = 29.9828;
+%     params.lat_north = 31.3703;
+%     params.lon_west = 113.6994;
+%     params.lon_east = 115.0869;
+% end
+[params.lat_south, params.lat_north, params.lon_west, params.lon_east]=...,
+    loadOSMRange(params.osmFile);
 
 params.z = 19;
 
@@ -33,9 +36,12 @@ params.filegroup = 10000;
 
 % cache file
 if params.debug
-    params.cacheOSM = 'E:/wuhan/cugOSM.mat';
-    params.cacheOSMMat = 'E:/wuhan/cugOSMMat.mat';
-    params.cacheExtendOSM = 'E:/wuhan/cugExtendOSMMat.mat';
+%     params.cacheOSM = 'E:/wuhan/cugOSM.mat';
+%     params.cacheOSMMat = 'E:/wuhan/cugOSMMat.mat';
+%     params.cacheExtendOSM = 'E:/wuhan/cugExtendOSMMat.mat';
+    params.cacheOSM = 'E:/wuhan/hustOSM.mat';
+    params.cacheOSMMat = 'E:/wuhan/hustOSMMat.mat';
+    params.cacheExtendOSM = 'E:/wuhan/hustExtendOSMMat.mat';
 else
     params.cacheOSM = 'E:/wuhan/wuhanOSM.mat';
     params.cacheOSMMat = 'E:/wuhan/wuhanOSMMat.mat';
@@ -56,7 +62,7 @@ params.x = params.x + (params.imgSize - mod(params.x, params.imgSize));
 params.m = params.m + (params.imgSize - mod(params.m, params.imgSize));
 params.y = params.y - mod(params.y, params.imgSize);
 params.n = params.n - mod(params.n, params.imgSize);
-
+% The area pixel Matrix size.
 params.numRows = params.n - params.m;
 params.numColumns = params.y - params.x;
 

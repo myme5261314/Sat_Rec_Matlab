@@ -17,6 +17,7 @@ extendMat = extendOSM(params);
 % params.osmMat = extendMat;
 
 rawXmem = genRawX(params);
+rawYmem = genY(params);
 % imgSize = 1024;
 % xrange = randi([1 floor((params.y-params.x-imgSize)/256)], 100000, 1)*256;
 % yrange = randi([1 floor((params.n-params.m-imgSize)/256)], 100000, 1)*256;
