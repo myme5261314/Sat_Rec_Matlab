@@ -17,15 +17,18 @@ Y = Y';
 end
 
 function result = loadData( fname, data_size, data_type, ind )
+    result = [];
     fId = fopen(fname, 'r');
     if strcmp(data_type, 'uint8')
         type_byte = 1;
     elseif strcmp(data_type, 'double')
         type_byte = 8;
     end
-    fseek(fId, (ind-1)*prod(data_size)*type_byte, 'bof');
-    result = fread(fId, data_size, data_type);
-    result = double(result);
+    for i=1:length(ind)
+        fseek(fId, (ind(i)-1)*prod(data_size)*type_byte, 'bof');
+        oneresult = fread(fId, data_size, data_type);
+        result = [result double(oneresult)];
+    end
     fclose(fId);
 end
 

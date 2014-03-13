@@ -27,8 +27,8 @@ m = size(X, 1);
          
 % You need to return the following variables correctly 
 J = 0;
-Theta1_grad = zeros(size(Theta1));
-Theta2_grad = zeros(size(Theta2));
+% Theta1_grad = zeros(size(Theta1));
+% Theta2_grad = zeros(size(Theta2));
 
 % ====================== YOUR CODE HERE ======================
 % Instructions: You should complete the code by working through the
@@ -89,8 +89,10 @@ delta2 = Theta2'*delta3 .* sigmoidGradient(Z2);
 delta2 = delta2(2:end,:);
 %delta3 = delta3(2:end);
 
-Theta1_grad = (Theta1_grad + delta2*X)/m;
-Theta2_grad = (Theta2_grad + delta3*A2')/m;
+% Theta1_grad = (Theta1_grad + delta2*X)/m;
+% Theta2_grad = (Theta2_grad + delta3*A2')/m;
+Theta1_grad = delta2*X/m;
+Theta2_grad = delta3*A2'/m;
 
 Theta1_grad(:,2:end) = Theta1_grad(:,2:end) + lambda/m * Theta1(:,2:end);
 Theta2_grad(:,2:end) = Theta2_grad(:,2:end) + lambda/m * Theta2(:,2:end);
