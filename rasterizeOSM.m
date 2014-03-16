@@ -9,24 +9,6 @@ if exist(params.cacheOSMMat, 'file')
     return
 end
 
-numColumns = params.y - params.x;
-numRows = params.n - params.m;
-% m x-----y
-% |
-% n
-if ~exist('OSMMat.dat', 'file')
-    fId = fopen('OSMMat.dat','w');
-    for colNum = 1:numColumns
-        column = zeros(numRows, 1);
-        fwrite(fId,column,'double');
-    end
-    fclose(fId);
-end
-
-memMat = memmapfile('OSMMat.dat', 'format', {'double', [numRows numColumns], 'mat' });
-memMat.Writable = true;
-
-
 ks = cell2mat(keys(params.wayMap));
 indList = [];
 count = 0;
@@ -49,8 +31,6 @@ indList = unique(indList','rows')';
 % Because the OSM's xy coordinate is different from the matlab's
 % row/column coordinate.
 osmMat = sparse(indList(2,:), indList(1,:),1, params.numRows, params.numColumns);
-idxList = sub2ind([numRows numColumns], indList(2,:), indList(1,:));
-memMat.Data.mat(idxList) = 1;
 
 save(params.cacheOSMMat,'osmMat');
 % osmMat(indList) = 1;
@@ -86,13 +66,12 @@ function indList = rasterizeLine(ref1, ref2,params)
     rasterMatrix = [linspace(x1,x2,rasterPoint); linspace(y1,y2,rasterPoint)];
     
     rasterMatrix = round(rasterMatrix);
-    
     rasterMatrix = [ [rasterMatrix(1,:); rasterMatrix(2,:)] ...,
                      [rasterMatrix(1,:); rasterMatrix(2,:)+1] ...,
                      [rasterMatrix(1,:)+1; rasterMatrix(2,:)] ...,
                      [rasterMatrix(1,:)+1; rasterMatrix(2,:)+1] ...,
                    ];
-    % clear the point is out of range.
+    % clear the point is out of range
     [~, col] = find(rasterMatrix<=0);
     col = unique(col);
     rasterMatrix(:,col) = [];

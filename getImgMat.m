@@ -1,6 +1,10 @@
 function [ ImgMat ] = getImgMat( xStart, yStart, MatSize, params )
 %GETIMGMAT Summary of this function goes here
 %   This is the function to generate the response img matrix.
+%   *---->x
+%   |
+%   |       Matsize = [range size of x
+%   y                   range size of y]
 xStart = xStart + params.x - 1;
 yStart = yStart + params.m - 1;
 xEnd = xStart + MatSize(1) - 1;
