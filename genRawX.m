@@ -48,16 +48,7 @@ for i = 1:Xend
         yStart = pF(j);
         matSize = [WindowSize WindowSize];
 %             tempMat = getImgMat(xStart, yStart, matSize, params);
-        try
-            tempMat = params.BingMat(yStart:yStart+ matSize(2)-1, xStart:xStart+matSize(1)-1,:);
-        catch err
-            i
-            j
-            xStart
-            yStart
-            size(params.BingMat)
-            pause;
-        end
+        tempMat = params.BingMat(yStart:yStart+ matSize(2)-1, xStart:xStart+matSize(1)-1,:);
         tempMat = permute(tempMat, [3 1 2]);
         tempMat = tempMat(:)';
         rawXmem(count,:) = tempMat;
