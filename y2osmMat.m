@@ -26,9 +26,6 @@ for i = 1:m
     Yind = mod((i-1), Yend) + 1;
     Xind = pF(Xind);
     Yind = pF(Yind);
-    verify_mat = params.extendMat(Yind:Yind+Stride-1, Xind:Xind+Stride-1);
-    verify_v = all(all(verify_mat == one_data));
-%     assert(verify_v);
     osmMat(Yind:Yind+Stride-1, Xind:Xind+Stride-1) = one_data;
 end
     

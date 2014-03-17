@@ -15,7 +15,7 @@ tF = @(l) floor((l - WindowSize)/Stride);
 % Yend = 1756
 Xend = tF(params.numColumns);
 Yend = tF(params.numRows);
-pF = @(ind) (ind - 1)*Stride + 1;
+pF = @(ind) (ind - 1)*Stride + 1 + (WindowSize-Stride)/2;
 dataNum = Xend*Yend;
 
 rawYmem = zeros(dataNum, Stride^2);
@@ -43,8 +43,6 @@ for i = 1:Xend
         end
         xStart = pF(i);
         yStart = pF(j);
-        xStart = xStart + (WindowSize-Stride)/2;
-        yStart = yStart + (WindowSize-Stride)/2;
 %             matSize = [WindowSize WindowSize];
 %             tempMat = getImgMat(xStart, yStart, matSize, params);
 %             tempMat = permute(tempMat, [3 1 2]);
