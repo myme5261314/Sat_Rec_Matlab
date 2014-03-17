@@ -39,9 +39,15 @@ if params.debug
 %     params.cacheOSM = 'E:/wuhan/cugOSM.mat';
 %     params.cacheOSMMat = 'E:/wuhan/cugOSMMat.mat';
 %     params.cacheExtendOSM = 'E:/wuhan/cugExtendOSMMat.mat';
-    params.cacheOSM = 'E:/wuhan/hustOSM.mat';
-    params.cacheOSMMat = 'E:/wuhan/hustOSMMat.mat';
-    params.cacheExtendOSM = 'E:/wuhan/hustExtendOSMMat.mat';
+    params.cacheOSM = fullfile(params.dataFolder, 'hustOSM.mat');
+    params.cacheOSMMat = fullfile(params.dataFolder, 'hustOSMMat.mat');
+    params.cacheExtendOSM = fullfile(params.dataFolder, 'hustExtendOSMMat.mat');
+    params.cacheBingMapMat = fullfile(params.dataFolder, 'BingMap_HUST.mat');
+    params.cacheBingImage = fullfile(params.dataFolder, 'BingMap_HUST.jpg');
+    params.cacheOSMImage = fullfile(params.dataFolder, 'osmMap_HUST.jpg');
+    params.cacheRawXMat = fullfile(params.dataFolder, 'RawX.mat');
+    params.cacheRawYMat = fullfile(params.dataFolder, 'RawY.mat');
+    
 else
     params.cacheOSM = 'E:/wuhan/wuhanOSM.mat';
     params.cacheOSMMat = 'E:/wuhan/wuhanOSMMat.mat';

@@ -3,8 +3,8 @@ function [ rawYmem ] = genY( params )
 %   This is the function to generate the cooresponding Y [m n] matrix, m is
 %   the num of data record, n is the num of output.
 
-if exist('e:/wuhan/RawY.mat', 'file')
-    load('e:/wuhan/RawY.mat');
+if exist(params.cacheRawYMat, 'file')
+    load(params.cacheRawYMat);
     return;
 end
 
@@ -53,7 +53,7 @@ for i = 1:Xend
     end
 end
 assert(count==dataNum);
-save('E:/wuhan/RawY.mat', 'rawYmem', '-v7.3');
+save(params.cacheRawYMat, 'rawYmem', '-v7.3');
 
 end
 

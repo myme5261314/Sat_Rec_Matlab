@@ -12,18 +12,18 @@ params.osmMat = rasterizeOSM(params);
 % Extend the OSM Matrix
 params.extendMat = extendOSM(params);
 % Save OSM illustration data to image
-imwrite(full(params.extendMat), 'e:/wuhan/osmMap_HUST.jpg');
+imwrite(full(params.extendMat), params.cacheOSMImage);
 % Load Bing Map Generated Map Data
-if exist('e:/wuhan/BingMap_HUST.mat', 'file')
-    params.BingMat = load('e:/wuhan/BingMap_HUST.mat');
+if exist(params.cacheBingMapMat, 'file')
+    params.BingMat = load(params.cacheBingMapMat);
 else
     BingMat = getImgMat(1,1,[params.numColumns params.numRows], params);
-    save('e:/wuhan/BingMap_HUST.mat', 'BingMat');
+    save(params.cacheBingMapMat, 'BingMat');
     params.BingMat = BingMat;
     clear BingMat;
 end
 % Write Bing Map illustration data to image.
-imwrite(params.BingMat, 'e:/wuhan/BingMap_HUST.jpg');
+imwrite(params.BingMat, params.cacheBingImage);
 
 
 % [row, col, v] = find(extendMat);

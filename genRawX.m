@@ -3,8 +3,8 @@ function [ rawXmem ] = genRawX( params )
 %   This is the function to generate the cooresponding X [m n] matrix, m is
 %   the num of data record, n is the num of features.
 
-if exist('e:/wuhan/RawX.mat', 'file')
-    load('e:/wuhan/RawX.mat');
+if exist(params.cacheRawXMat, 'file')
+    load(params.cacheRawXMat);
     return;
 end
 
@@ -58,7 +58,7 @@ for i = 1:Xend
 end
 assert(count == total_case);
 % fclose(fId);
-save('e:/wuhan/RawX.mat', 'rawXmem', '-v7.3');
+save(params.cacheRawXMat, 'rawXmem', '-v7.3');
 
 % rawXmem = memmapfile('F:/RawX.dat', 'format', {'uint8', [dataNum WindowSize^2*3], 'mat' });
 % temp = rawXmem.Data.mat;
