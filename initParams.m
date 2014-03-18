@@ -51,6 +51,7 @@ if params.debug
     params.cacheOSMImage = fullfile(params.dataFloder, 'osmMap_HUST.jpg');
     params.cacheRawXMat = fullfile(params.dataFloder, 'RawX.mat');
     params.cacheRawYMat = fullfile(params.dataFloder, 'RawY.mat');
+    params.cachePredOSMMat = fullfile(params.dataFloder, 'PredOSM.mat');
     
 else
     params.cacheOSM = 'E:/wuhan/wuhanOSM.mat';

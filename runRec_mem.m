@@ -40,7 +40,8 @@ imwrite(params.BingMat, params.cacheBingImage);
 params.rawXmem = genRawX(params);
 % Generate Y from the OSM data.
 params.rawYmem = genY(params);
-osmMat = y2osmMat(params.rawYmem, params);
+% Restore the osmMat from the generated Y.
+% osmMat = y2osmMat(params.rawYmem, params);
 % figure(1);
 % imshow(full(osmMat));
 % figure(2);
@@ -54,6 +55,12 @@ predY = NNTrain_mem(params);
 [precision, recall] = calAccuracy(params.extendMat, predY, params);
 precision
 recall
+
+if ~exist(params.cachePredOSMMat, 'file')
+    predOSMMat = y2osmMat(predY, params);
+    save(params.cachePredOSMMat, 'predOSMMat');
+end
+
 whos;
 % imgSize = 1024;
 % xrange = randi([1 floor((params.y-params.x-imgSize)/256)], 100000, 1)*256;
