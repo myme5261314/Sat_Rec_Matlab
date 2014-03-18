@@ -60,6 +60,7 @@ if ~exist(params.cachePredOSMMat, 'file')
     predOSMMat = y2osmMat(predY, params);
     save(params.cachePredOSMMat, 'predOSMMat');
 end
+imwrite(predOSMMat, params.cachePredOSMImage);
 
 whos;
 % imgSize = 1024;
