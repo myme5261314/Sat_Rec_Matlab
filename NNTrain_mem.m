@@ -10,8 +10,11 @@ lambda = 1;
 
 Xmean = mean(params.rawXmem);
 Xrange = max(params.rawXmem) - min(params.rawXmem);
-X = bsxfun(@minus, double(params.rawXmem), Xmean);
-X = bsxfun(@rdivide, X, Xrange);
+%   Need to use single precision to store X, because double precision X
+%   exceeds the memory size.
+X = bsxfun(@minus, single(params.rawXmem), single(Xmean));
+X = bsxfun(@rdivide, X, single(Xrange));
+assert(isa(X, 'single'));
 clear Xmean Xrange;
 
 y = params.rawYmem;
