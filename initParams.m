@@ -10,7 +10,7 @@ if strcmp(os, 'Windows_NT')
     params.dataFloder = 'E:/wuhan/';
 else
     params.dataFloder = '~/data/';
-
+end
 % The Whole OSM file
 if params.debug
 %     params.osmFile = 'E:/wuhan/cug.osm';
@@ -93,3 +93,4 @@ params.numColumns = params.y - params.x;
 % 
 % % use extra features from segmentation mask
 % params.extraFeatures = true;
+end
