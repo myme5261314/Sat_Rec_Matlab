@@ -9,7 +9,7 @@ os = getenv('os');
 if strcmp(os, 'Windows_NT')
     params.dataFloder = 'E:/wuhan/';
 else
-    params.dataFloder = '/home/cugrobot/data/';
+    params.dataFloder = '/home/cugrobot/data/wuhan/';
 end
 % The Whole OSM file
 if params.debug
