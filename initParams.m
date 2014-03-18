@@ -53,6 +53,7 @@ if params.debug
     params.cacheRawYMat = fullfile(params.dataFloder, 'RawY.mat');
     params.cacheThetaMat = fullfile(params.dataFloder, 'Theta.mat');
     params.cachePredOSMMat = fullfile(params.dataFloder, 'PredOSM.mat');
+    params.cachePredOSMImage = fullfile(params.dataFloder, 'PredOSM.jpg');
     
 else
     params.cacheOSM = 'E:/wuhan/wuhanOSM.mat';
