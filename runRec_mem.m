@@ -15,13 +15,14 @@ params.extendMat = extendOSM(params);
 imwrite(full(params.extendMat), params.cacheOSMImage);
 % Load Bing Map Generated Map Data
 if exist(params.cacheBingMapMat, 'file')
-    params.BingMat = load(params.cacheBingMapMat);
+    load(params.cacheBingMapMat);
+    params.BingMat = BingMat;
 else
     BingMat = getImgMat(1,1,[params.numColumns params.numRows], params);
     save(params.cacheBingMapMat, 'BingMat');
     params.BingMat = BingMat;
-    clear BingMat;
 end
+clear BingMat;
 % Write Bing Map illustration data to image.
 imwrite(params.BingMat, params.cacheBingImage);
 

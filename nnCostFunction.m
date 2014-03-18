@@ -1,4 +1,4 @@
-function [J grad] = nnCostFunction(nn_params, ...
+function [J, grad] = nnCostFunction(nn_params, ...
                                    input_layer_size, ...
                                    hidden_layer_size, ...
                                    output_layer_size, ...
@@ -26,7 +26,7 @@ Theta2 = reshape(nn_params((1 + (hidden_layer_size * (input_layer_size + 1))):en
 m = size(X, 1);
          
 % You need to return the following variables correctly 
-J = 0;
+% J = 0;
 % Theta1_grad = zeros(size(Theta1));
 % Theta2_grad = zeros(size(Theta2));
 
@@ -93,6 +93,9 @@ delta2 = delta2(2:end,:);
 % Theta2_grad = (Theta2_grad + delta3*A2')/m;
 Theta1_grad = delta2*X/m;
 Theta2_grad = delta3*A2'/m;
+
+% To release some useless variables for now.
+clear Y_trans X Z2 A2 hx temp1 temp2 delta3 delta2;
 
 Theta1_grad(:,2:end) = Theta1_grad(:,2:end) + lambda/m * Theta1(:,2:end);
 Theta2_grad(:,2:end) = Theta2_grad(:,2:end) + lambda/m * Theta2(:,2:end);
