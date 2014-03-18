@@ -5,14 +5,18 @@ params.debug = 1;
 params.portion = 0.001;
 
 % Set the data folder here
-params.dataFolder = 'E:/wuhan/';
+os = getenv('os');
+if strcmp(os, 'Windows_NT')
+    params.dataFloder = 'E:/wuhan/';
+else
+    params.dataFloder = '~/data/';
 
 % The Whole OSM file
 if params.debug
 %     params.osmFile = 'E:/wuhan/cug.osm';
-    params.osmFile = 'E:/wuhan/hust.osm';
+    params.osmFile = fullfile(params.dataFloder, 'hust.osm');
 else
-    params.osmFile = 'E:/wuhan/wuhan.osm';
+    params.osmFile = fullfile(params.dataFloder, 'wuhan.osm');
 end
 
 % The whole OSM area
@@ -39,14 +43,14 @@ if params.debug
 %     params.cacheOSM = 'E:/wuhan/cugOSM.mat';
 %     params.cacheOSMMat = 'E:/wuhan/cugOSMMat.mat';
 %     params.cacheExtendOSM = 'E:/wuhan/cugExtendOSMMat.mat';
-    params.cacheOSM = fullfile(params.dataFolder, 'hustOSM.mat');
-    params.cacheOSMMat = fullfile(params.dataFolder, 'hustOSMMat.mat');
-    params.cacheExtendOSM = fullfile(params.dataFolder, 'hustExtendOSMMat.mat');
-    params.cacheBingMapMat = fullfile(params.dataFolder, 'BingMap_HUST.mat');
-    params.cacheBingImage = fullfile(params.dataFolder, 'BingMap_HUST.jpg');
-    params.cacheOSMImage = fullfile(params.dataFolder, 'osmMap_HUST.jpg');
-    params.cacheRawXMat = fullfile(params.dataFolder, 'RawX.mat');
-    params.cacheRawYMat = fullfile(params.dataFolder, 'RawY.mat');
+    params.cacheOSM = fullfile(params.dataFloder, 'hustOSM.mat');
+    params.cacheOSMMat = fullfile(params.dataFloder, 'hustOSMMat.mat');
+    params.cacheExtendOSM = fullfile(params.dataFloder, 'hustExtendOSMMat.mat');
+    params.cacheBingMapMat = fullfile(params.dataFloder, 'BingMap_HUST.mat');
+    params.cacheBingImage = fullfile(params.dataFloder, 'BingMap_HUST.jpg');
+    params.cacheOSMImage = fullfile(params.dataFloder, 'osmMap_HUST.jpg');
+    params.cacheRawXMat = fullfile(params.dataFloder, 'RawX.mat');
+    params.cacheRawYMat = fullfile(params.dataFloder, 'RawY.mat');
     
 else
     params.cacheOSM = 'E:/wuhan/wuhanOSM.mat';
