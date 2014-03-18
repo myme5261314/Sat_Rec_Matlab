@@ -4,7 +4,7 @@ function [ predY ] = NNTrain_mem( params )
 %   X,Y data into memory.
 
 input_layer_size = 64*64*3;
-hidden_layer_size = 1;
+hidden_layer_size = 64*4;
 output_layer_size = 16*16;
 lambda = 1;
 
