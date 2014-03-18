@@ -52,15 +52,17 @@ params.rawYmem = genY(params);
 predY = NNTrain_mem(params);
 
 
-[precision, recall] = calAccuracy(params.extendMat, predY, params);
-precision
-recall
+
 
 if ~exist(params.cachePredOSMMat, 'file')
     predOSMMat = y2osmMat(predY, params);
     save(params.cachePredOSMMat, 'predOSMMat');
 end
 imwrite(predOSMMat, params.cachePredOSMImage);
+
+[precision, recall] = calAccuracy(params.extendMat, predOSMMat, params);
+precision
+recall
 
 whos;
 % imgSize = 1024;
