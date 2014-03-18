@@ -46,8 +46,8 @@ params.rawYmem = genY(params);
 % imshow(full(osmMat));
 % figure(2);
 % imshow(full(params.extendMat));
-assert_v = osmMat(25:end-40,25:end-40) == params.extendMat(25:end-40,25:end-40);
-assert(all(all(assert_v)));
+% assert_v = osmMat(25:end-40,25:end-40) == params.extendMat(25:end-40,25:end-40);
+% assert(all(all(assert_v)));
 
 predY = NNTrain_mem(params);
 
