@@ -47,7 +47,7 @@ Theta1 = reshape(nn_params(1:hidden_layer_size * (input_layer_size + 1)), ...
 Theta2 = reshape(nn_params((1 + (hidden_layer_size * (input_layer_size + 1))):end), ...
                  num_labels, (hidden_layer_size + 1));
 
-save('e:/wuhan/Theta.mat', 'Theta1', 'Theta2');
+save(params.cacheThetaMat, 'Theta1', 'Theta2');
 
 %% ================= Part 10: Implement Predict =================
 %  After training the neural network, we would like to use it to predict
