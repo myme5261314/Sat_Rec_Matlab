@@ -7,10 +7,15 @@ function [ reduceMat ] = pca_Reduce( rawMat, reduceDimension )
 rawMat = bsxfun(@minus, single(rawMat), mean(rawMat));
 rawMat = bsxfun(@rdivide, rawMat, max(rawMat) - min(rawMat));
 
-[coeff, score, latent] = pca(rawMat);
-per = sum(latent(1:reduceDimension,:))/sum(latent);
+% [coeff, score, latent] = pca(rawMat);
+sig = cov(rawMat);
+[U, S, ~] = svd(sig);
+Ureduce = U(:,1:reduceDimension);
+% per = sum(latent(1:reduceDimension,:))/sum(latent);
+per = sum(sum(S(:,1:reduceDimension)))/sum(sum(S));
 fprintf('The remaining covariance is %f', per);
-reduceMat = rawMat * coeff(:,1:reduceDimension);
+% reduceMat = rawMat * coeff(:,1:reduceDimension);
+reduceMat = rawMat * Ureduce;
 
 end
 
