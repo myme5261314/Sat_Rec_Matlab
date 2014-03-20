@@ -3,19 +3,20 @@ function [ predY ] = NNTrain_mem( params )
 %   This is the function to train the Neural Network by loading the whole
 %   X,Y data into memory.
 
-input_layer_size = 64*64*3;
-hidden_layer_size = 64*4;
+input_layer_size = 64*64;
+hidden_layer_size = 64*64*3;
 output_layer_size = 16*16;
 lambda = 1;
 
-Xmean = mean(params.rawXmem);
-Xrange = max(params.rawXmem) - min(params.rawXmem);
+% Xmean = mean(params.rawXmem);
+% Xrange = max(params.rawXmem) - min(params.rawXmem);
 %   Need to use single precision to store X, because double precision X
 %   exceeds the memory size.
-X = bsxfun(@minus, single(params.rawXmem), single(Xmean));
-X = bsxfun(@rdivide, X, single(Xrange));
-assert(isa(X, 'single'));
-clear Xmean Xrange;
+% X = bsxfun(@minus, single(params.rawXmem), single(Xmean));
+% X = bsxfun(@rdivide, X, single(Xrange));
+% assert(isa(X, 'single'));
+% clear Xmean Xrange;
+X = pca_Reduce(params.rawXmem, input_layer_size);
 
 y = params.rawYmem;
 
