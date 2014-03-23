@@ -40,7 +40,7 @@ nn.activation_function = 'sigm';
 %train nn
 opts.numepochs =  50;
 opts.batchsize = 100;
-nn = nntrain(nn, train_x, train_y, opts);
+nn = nntrain(nn, X, y, opts);
 % [er, bad] = nntest(nn, test_x, test_y);
 predY = nnpredict(nn, X);
 
