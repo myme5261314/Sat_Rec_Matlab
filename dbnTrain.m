@@ -12,6 +12,14 @@ X = bsxfun(@rdivide, bsxfun(@minus, X, min(X)), max(X)-min(X));
 y = params.rawYmem;
 
 %%  ex1 train a 100 hidden unit RBM and visualize its weights
+factorlist = factor(size(X,1));
+opts.batchsize = 1;
+for i=length(factorlist):1
+    opts.batchsize = opts.batchsize * factorlist(i);
+    if opts>=1000
+        break;
+    end
+end
 rand('state',0)
 dbn.sizes = [ hidden_layer_size ];
 opts.numepochs =   50;
