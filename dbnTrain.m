@@ -14,7 +14,7 @@ y = params.rawYmem;
 %%  ex1 train a 100 hidden unit RBM and visualize its weights
 factorlist = factor(size(X,1));
 opts.batchsize = 1;
-for i=length(factorlist):1
+for i=length(factorlist):-1:1
     opts.batchsize = opts.batchsize * factorlist(i);
     if opts.batchsize>=1000
         break;
