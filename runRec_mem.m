@@ -49,7 +49,7 @@ params.rawYmem = genY(params);
 % assert_v = osmMat(25:end-40,25:end-40) == params.extendMat(25:end-40,25:end-40);
 % assert(all(all(assert_v)));
 
-predY = NNTrain_mem(params);
+predY = dbnTrain(params);
 
 
 
