@@ -7,6 +7,7 @@ hidden_layer_size = 64*64*3;
 output_layer_size = 16*16;
 
 X = pca_Reduce(params.rawXmem, input_layer_size);
+X = bsxfun(@rdivide, bsxfun(@minus, X, mean(X)), max(X)-min(X));
 
 y = params.rawYmem;
 
