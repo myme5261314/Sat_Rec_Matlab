@@ -16,7 +16,7 @@ factorlist = factor(size(X,1));
 opts.batchsize = 1;
 for i=length(factorlist):1
     opts.batchsize = opts.batchsize * factorlist(i);
-    if opts>=1000
+    if opts.batchsize>=1000
         break;
     end
 end
