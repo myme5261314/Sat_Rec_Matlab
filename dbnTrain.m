@@ -23,7 +23,7 @@ end
 rand('state',0)
 dbn.sizes = [ hidden_layer_size ];
 opts.numepochs =   50;
-opts.batchsize = 100;
+% opts.batchsize = 100;
 opts.momentum  =   0;
 opts.alpha     =   1;
 dbn = dbnsetup(dbn, X, opts);
