@@ -10,9 +10,8 @@ function [ reduceMat ] = pca_Reduce( rawMat, reduceDimension )
 % [coeff, score, latent] = pca(rawMat);
 [m, n] = size(rawMat);
 sig = zeros(n, n);
-preX = single(rawMat);
-mu = mean(preX);
-sigma = std(preX);
+mu = single(mean(rawMat));
+sigma = std(single(rawMat));
 batchsize = 1000;
 for i = 1:batchsize:m
     temp = rawMat(i:i+batchsize-1, :);
@@ -35,7 +34,7 @@ Ureduce = U(:,1:reduceDimension);
 per = sum(sum(S(:,1:reduceDimension)))/sum(sum(S));
 fprintf('The remaining covariance is %f', per);
 % reduceMat = rawMat * coeff(:,1:reduceDimension);
-reduceMat = preX * Ureduce;
+reduceMat = single(rawMat) * Ureduce;
 
 end
 
