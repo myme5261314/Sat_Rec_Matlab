@@ -8,9 +8,31 @@ if ~exist('E:/wuhan/pcaX.mat', 'file')
 else
     load('E:/wuhan/pcaX.mat');
 end
-mu = mean(Xmem);
-sigma = std(single(Xmem));
-Xmem = bsxfun(@rdivide, bsxfun(@minus, Xmem, mu), sigma);
+batchsize = 1000;
+% mu = mean(Xmem);
+mu = partExec(Xmem, batchsize, @sumFun);
+stdHandler = @(mat) stdFun(mat, mu);
+sigma = sqrt(partExec(Xmem, batchsize, stdHandler));
+% sigma = std(single(Xmem));
+Xmem = bsxfun(@rdivide, bsxfun(@minus, Xmem, single(mu)), single(sigma));
 
 end
 
+function result = sumFun(mat)
+
+if size(mat,1) ~= 1
+    result =sum(mat);
+else
+    result = mat;
+end
+end
+
+function result = stdFun(mat, mu)
+
+temp = power(bsxfun(@minus, mat, mu), 2);
+if size(mat,1) ~= 1
+    result =sum(temp);
+else
+    result = temp;
+end
+end
