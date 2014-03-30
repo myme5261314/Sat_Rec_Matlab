@@ -14,7 +14,7 @@ end
 % The Whole OSM file
 if params.debug
 %     params.osmFile = 'E:/wuhan/cug.osm';
-    params.osmFile = fullfile(params.dataFloder, 'hust.osm');
+    params.osmFile = fullfile(params.dataFloder, '30.582128_30.588783_114.273462_114.290502.osm');
 else
     params.osmFile = fullfile(params.dataFloder, 'wuhan.osm');
 end

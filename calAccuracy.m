@@ -13,7 +13,20 @@ function [ precision, recall ] = calAccuracy( Yorigin, Ypredict, params )
 tF = @(mat) mat(25:end-40,25:end-40);
 Yorigin = tF(Yorigin);
 Ypredict = tF(Ypredict);
-threshold = 0.7;
+% threshold = 0.7;
+perF = @(mat) nnz(mat)/numel(mat);
+per = perF(Yorigin);
+temp = Ypredict;
+old_per = perF(temp);
+threshold = 0.5;
+for i=0:0.0001:1
+    temp(temp<=i) = 0;
+    new_per = perF(temp);
+    if old_per>per && new_per < per
+        threshold = i+0.00005;
+        break;
+    end
+end
 Yorigin_temp = full(Yorigin);
 Ypredict_temp = Ypredict;
 Yorigin_temp(Yorigin_temp>=threshold) = 1;

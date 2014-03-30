@@ -47,7 +47,7 @@ for i = 1:Xend
 %             tempMat = getImgMat(xStart, yStart, matSize, params);
 %             tempMat = permute(tempMat, [3 1 2]);
 %             tempMat = yMat(yStart:yStart+Stride-1, xStart:xStart+Stride-1);
-        tempMat = params.osmMat(yStart:yStart+Stride-1, xStart:xStart+Stride-1);
+        tempMat = params.extendMat(yStart:yStart+Stride-1, xStart:xStart+Stride-1);
         tempMat = full(tempMat(:))';
         rawYmem(count,:) = tempMat;
     end
