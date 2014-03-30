@@ -8,14 +8,34 @@ function [ reduceMat ] = pca_Reduce( rawMat, reduceDimension )
 % rawMat = bsxfun(@rdivide, rawMat, max(rawMat) - min(rawMat));
 
 % [coeff, score, latent] = pca(rawMat);
-sig = cov(single(rawMat));
+[m, n] = size(rawMat);
+sig = zeros(n, n);
+preX = single(rawMat);
+mu = mean(preX);
+sigma = std(preX);
+batchsize = 1000;
+for i = 1:batchsize:m
+    temp = rawMat(i:i+batchsize-1, :);
+    temp = bsxfun(@rdivide, bsxfun(@minus, temp, mu), sigma);
+    sig = sig + temp'*temp;
+end
+r = mod(m, batchsize);
+if r ~= 0
+    temp = rawMat(end-r+1:end, :);
+    temp = bsxfun(@rdivide, bsxfun(@minus, temp, mu), sigma);
+    sig = sig + temp'*temp;
+end
+sig = sig/m;
+% If the rawMat size is too big, then cov(rawMat) may cause out of memory.
+% sig = cov(single(rawMat));
 [U, S, ~] = svd(sig);
+clear sig;
 Ureduce = U(:,1:reduceDimension);
 % per = sum(latent(1:reduceDimension,:))/sum(latent);
 per = sum(sum(S(:,1:reduceDimension)))/sum(sum(S));
 fprintf('The remaining covariance is %f', per);
 % reduceMat = rawMat * coeff(:,1:reduceDimension);
-reduceMat = single(rawMat) * Ureduce;
+reduceMat = preX * Ureduce;
 
 end
 

@@ -9,8 +9,10 @@ params = initParams();
 [params.nodeMap, params.wayMap] = loadOSM(params);
 % Rasterize the OSM Matrix
 params.osmMat = rasterizeOSM(params);
+params = rmfield(params, {'nodeMap', 'wayMap'});
 % Extend the OSM Matrix
 params.extendMat = extendOSM(params);
+params = rmfield(params, 'osmMat');
 % Save OSM illustration data to image
 imwrite(full(params.extendMat), params.cacheOSMImage);
 % Load Bing Map Generated Map Data
@@ -48,6 +50,8 @@ params.rawYmem = genY(params);
 % imshow(full(params.extendMat));
 % assert_v = osmMat(25:end-40,25:end-40) == params.extendMat(25:end-40,25:end-40);
 % assert(all(all(assert_v)));
+params.Xmem = preprocessX(params);
+params = rmfield(params, 'rawXmem');
 
 predY = dbnTrain(params);
 
@@ -61,8 +65,8 @@ end
 imwrite(predOSMMat, params.cachePredOSMImage);
 
 [precision, recall] = calAccuracy(params.extendMat, predOSMMat, params);
-precision
-recall
+disp(precision);
+disp(recall);
 
 whos;
 % imgSize = 1024;

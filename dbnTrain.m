@@ -6,14 +6,7 @@ input_layer_size = 64*64;
 hidden_layer_size = 64*64*3;
 output_layer_size = 16*16;
 
-if ~exist('E:/wuhan/pcaX.mat', 'file')
-    X = pca_Reduce(params.rawXmem, input_layer_size);
-%     X = bsxfun(@rdivide, bsxfun(@minus, X, min(X)), max(X)-min(X));
-    save('E:/wuhan/pcaX.mat', 'X');
-else
-    load('E:/wuhan/pcaX.mat');
-end
-X = bsxfun(@rdivide, bsxfun(@minus, X, mean(X)), std(X));
+X = params.Xmem;
 y = params.rawYmem;
 
 %%  ex1 train a 100 hidden unit RBM and visualize its weights
