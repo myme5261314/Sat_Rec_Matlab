@@ -40,9 +40,11 @@ end
 for i=1:size(idx, 2)-1
     if i ~= size(idx,2)-1
         temp = rawMat(idx(i):idx(i+1)-1, :);
+        temp = single(temp);
         reduceMat(idx(i):idx(i+1)-1,:) = temp * Ureduce;
     else
         temp = rawMat(idx(i):idx(i+1), :);
+        temp = single(temp);
         reduceMat(idx(i):idx(i+1),:) = temp * Ureduce;
     end
 end
