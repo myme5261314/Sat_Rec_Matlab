@@ -32,7 +32,8 @@ Ureduce = U(:,1:reduceDimension);
 per = sum(sum(S(:,1:reduceDimension)))/sum(sum(S));
 fprintf('The remaining covariance is %f', per);
 % reduceMat = rawMat * coeff(:,1:reduceDimension);
-reduceMat = zeros(m, reduceDimension, 'single');
+% reduceMat = zeros(m, reduceDimension, 'single');
+reduceMat = [];
 idx = 1:batchsize:m;
 if idx(end) ~= m
     idx = [idx m];
@@ -40,13 +41,12 @@ end
 for i=1:size(idx, 2)-1
     if i ~= size(idx,2)-1
         temp = rawMat(idx(i):idx(i+1)-1, :);
-        temp = single(temp);
-        reduceMat(idx(i):idx(i+1)-1,:) = temp * Ureduce;
+%         reduceMat(idx(i):idx(i+1)-1,:) = temp * Ureduce;
     else
         temp = rawMat(idx(i):idx(i+1), :);
-        temp = single(temp);
-        reduceMat(idx(i):idx(i+1),:) = temp * Ureduce;
+%         reduceMat(idx(i):idx(i+1),:) = temp * Ureduce;
     end
+    reduceMat = [reduceMat; single(single(temp) * Ureduce)];
 end
 
 % reduceMat = single(rawMat) * Ureduce;
