@@ -50,9 +50,12 @@ params.rawYmem = genY(params);
 % imshow(full(params.extendMat));
 % assert_v = osmMat(25:end-40,25:end-40) == params.extendMat(25:end-40,25:end-40);
 % assert(all(all(assert_v)));
-params.Xmem = preprocessX(params);
+% params.Xmem = preprocessX(params);
+Xmem = preprocessX(params);
 params = rmfield(params, 'rawXmem');
-
+params.Xmem = Xmem;
+clear Xmem;
+disp(params);
 predY = dbnTrain(params);
 
 
