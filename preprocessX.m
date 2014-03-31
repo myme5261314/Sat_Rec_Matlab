@@ -10,10 +10,12 @@ else
 end
 batchsize = 1000;
 % mu = mean(Xmem);
-mu = partExec(Xmem, batchsize, @sumFun);
+mu = partExec(Xmem, batchsize, @sumFun, 'gpu');
 stdHandler = @(mat) stdFun(mat, mu);
-sigma = sqrt(partExec(Xmem, batchsize, stdHandler));
+sigma = sqrt(partExec(Xmem, batchsize, stdHandler), 'gpu');
 % sigma = std(single(Xmem));
+mu = gather(mu);
+sigma = gather(sigma);
 Xmem = bsxfun(@rdivide, bsxfun(@minus, Xmem, single(mu)), single(sigma));
 
 end

@@ -12,13 +12,16 @@ function [ reduceMat ] = pca_Reduce( rawMat, reduceDimension )
 % sig = zeros(n, n);
 batchsize = 1000;
 
-mu = partExec(rawMat, batchsize, @sumFun);
+mu = partExec(rawMat, batchsize, @sumFun, 'gpu');
+mu = mu/m;
 stdHandler = @(mat) stdFun(mat, mu);
-sigma = sqrt(partExec(rawMat, batchsize, stdHandler));
+sigma = sqrt(partExec(rawMat, batchsize, stdHandler, 'gpu') / m);
 % sigma = std(single(rawMat));
-
+mu = gather(mu);
+sigma = gather(sigma);
 covHandler = @(mat) covFun(mat, mu, sigma);
-sig = partExec(rawMat, batchsize, covHandler);
+sig = single(partExec(rawMat, batchsize, covHandler)) / m;
+
 
 % If the rawMat size is too big, then cov(rawMat) may cause out of memory.
 % sig = cov(single(rawMat));
@@ -30,13 +33,20 @@ per = sum(sum(S(:,1:reduceDimension)))/sum(sum(S));
 fprintf('The remaining covariance is %f', per);
 % reduceMat = rawMat * coeff(:,1:reduceDimension);
 reduceMat = zeros(m, reduceDimension, 'single');
-for i=1:batchsize:m
-    reduceMat(i:i+batchsize-1,:) = single(rawMat(i:i+batchsize-1,:) * Ureduce);
+idx = 1:batchsize:m;
+if idx(end) ~= m
+    idx = [idx m];
 end
-r = mod(m, batchsize);
-if r~=0
-    reduceMat(end-r+1:end,:) = single(rawMat(end-r+1:end,:) * Ureduce);
+for i=1:size(idx, 2)-1
+    if i ~= size(idx,2)-1
+        temp = rawMat(idx(i):idx(i+1)-1, :);
+        reduceMat(idx(i):idx(i+1)-1,:) = temp * Ureduce;
+    else
+        temp = rawMat(idx(i):idx(i+1), :);
+        reduceMat(idx(i):idx(i+1),:) = temp * Ureduce;
+    end
 end
+
 % reduceMat = single(rawMat) * Ureduce;
 
 end
