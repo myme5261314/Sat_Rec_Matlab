@@ -4,7 +4,7 @@ function [ Xmem ] = preprocessX( params )
 if ~exist('E:/wuhan/pcaX.mat', 'file')
     Xmem = pca_Reduce(params.rawXmem, size(params.rawXmem, 2));
 %     X = bsxfun(@rdivide, bsxfun(@minus, X, min(X)), max(X)-min(X));
-    save('E:/wuhan/pcaX.mat', 'Xmem');
+    save('E:/wuhan/pcaX.mat', 'Xmem', '-v7.3');
 else
     load('E:/wuhan/pcaX.mat');
 end
