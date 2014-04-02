@@ -10,12 +10,12 @@ mu = mu/m;
 stdHandler = @(mat) sum(bsxfun(@minus, mat, mu).^2);
 sigma = sqrt(partExec(rawXmem, batchsize, stdHandler, 'gpu') / m);
 % sigma = std(single(rawMat));
-% mu = gather(mu);
-% sigma = gather(sigma);
+
 covHandler = @(mat) covFun(mat, mu, sigma);
 sig = single(partExec(rawXmem, batchsize, covHandler, 'gpu')) / m;
-clear mu sigma;
-
+% clear mu sigma;
+mu = single(gather(mu));
+sigma = single(gather(sigma));
 
 % If the rawMat size is too big, then cov(rawMat) may cause out of memory.
 % sig = cov(single(rawMat));
@@ -44,6 +44,9 @@ fprintf('The remaining covariance is %f', per);
 %     end
 %     reduceMat = [reduceMat; single(single(temp) * Ureduce)];
 % end
+rawXmem = single(rawXmem);
+rawXmem = bsxfun(@minus, rawXmem, mu);
+rawXmem = bsxfun(@rdivide, rawXmem, sigma);
 rawXmem = rawXmem * Ureduce;
 Xmem = rawXmem;
 save('correct_pcaX.mat', 'Xmem');
