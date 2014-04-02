@@ -1,7 +1,13 @@
 function [ reduceMat ] = pca_Manualy( input_args )
 %PCA_MANUALY Summary of this function goes here
 %   Detailed explanation goes here
-load('RawX.mat');
+os = getenv('os');
+if strcmp(os, 'Windows_NT')
+    dataFloder = 'E:/wuhan/';
+else
+    dataFloder = '/data/wuhan/';
+end
+load(fullfile(dataFloder, 'RawX.mat'));
 [m, n] = size(rawXmem);
 batchsize = 10000;
 
@@ -49,7 +55,7 @@ rawXmem = bsxfun(@minus, rawXmem, mu);
 rawXmem = bsxfun(@rdivide, rawXmem, sigma);
 rawXmem = rawXmem * Ureduce;
 Xmem = rawXmem;
-save('correct_pcaX.mat', 'Xmem');
+save(fullfile(dataFloder, 'correct_pcaX.mat'), 'Xmem');
 clear Xmem;
 reduceMat = rawXmem;
 
