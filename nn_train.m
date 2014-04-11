@@ -25,7 +25,7 @@ g_Theta2 = gpuArray(nn.Theta2);
 g_vTheta1 = gpuArray(nn.vTheta1);
 g_vTheta2 = gpuArray(nn.vTheta2);
 
-gpu = gpuDevice();
+% gpu = gpuDevice();
 
 for i=1:numepochs
     tic;
@@ -37,7 +37,7 @@ for i=1:numepochs
     g_cacheX = gpuArray(g_cacheX);
     g_cacheY = gpuArray(single(g_cacheY/255));
     for l = 1 : numbatches
-        tic;
+%         tic;
         dataidx = [(l-1)*opts.batchsize+1 l*opts.batchsize];
         data_imgidx = ceil(dataidx/data_per_img);
         data_dataidx = mod(dataidx-1, data_per_img)+1;
@@ -113,9 +113,9 @@ for i=1:numepochs
         g_Theta1_grad = delta2*batchX;
 %         g_Theta1_grad = g_Theta1_grad/g_batchsize;
 %         g_Theta1_grad = delta2*batchX/g_batchsize;
-        disp(gpu.FreeMemory);
+%         disp(gpu.FreeMemory);
         clear batchX delta2;
-        disp(gpu.FreeMemory);
+%         disp(gpu.FreeMemory);
 %         wait(gpu);
         g_Theta1_grad = g_Theta1_grad * (g_alpha/g_batchsize);
         g_temp = gpuArray.zeros(size(g_Theta1),'single');
@@ -138,10 +138,10 @@ for i=1:numepochs
 
 
        
-        toc;
+%         toc;
         
         
-        wait(gpu);
+%         wait(gpu);
         
     end
 end
