@@ -22,7 +22,7 @@ os = getenv('os');
 if strcmp(os, 'Windows_NT')
     params.dataFloder = 'E:/Sat_Rec_Dataset/Mass_Roads/';
 else
-    params.dataFloder = '/home/cugrobot/data/wuhan/';
+    params.dataFloder = '/home/cug/Sat_Rec_Dataset/Mass_Roads/';
 end
 params.trainFloder = 'Train';
 params.validFloder = 'Valid';
