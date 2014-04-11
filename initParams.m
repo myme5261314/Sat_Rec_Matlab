@@ -1,96 +1,191 @@
-% This is the configuration file of this project
 function params = initParams()
-% use a small portion of dataset for debugging
+% This is the configuration file of this project
+
+%% Init params configuration
 params.debug = 1;
+params.debugSize = 10;
 params.portion = 0.001;
+
+params.restart = 0;
+params.imgSize = [1500 1500];
+params.WindowSize = 64;
+params.StrideSize = 16;
+params.datasize_per_img = img2matsize(params.imgSize, params.WindowSize,...
+    params.StrideSize);
+params.data_per_img = prod(params.datasize_per_img);
+
+params.rawD = params.WindowSize^2*3;
+params.reduce = params.WindowSize^2;
 
 % Set the data folder here
 os = getenv('os');
 if strcmp(os, 'Windows_NT')
-    params.dataFloder = 'E:/wuhan/';
+    params.dataFloder = 'E:/Sat_Rec_Dataset/Mass_Roads/';
 else
     params.dataFloder = '/home/cugrobot/data/wuhan/';
 end
-% The Whole OSM file
+params.trainFloder = 'Train';
+params.validFloder = 'Valid';
+params.testFloder = 'Test';
+params.satFloder = 'Sat';
+params.mapFloder = 'Map';
+
+params.cacheFloder = fullfile(params.dataFloder, 'cache');
+params.cacheRBM = fullfile(params.cacheFloder, 'rbm.mat');
+params.cacheNN = fullfile(params.cacheFloder, 'nn.mat');
+
+%% Get Data File path.
+[params.trainXfile, params.trainYfile] = getDataSetFilePath(...
+    params.dataFloder, params.trainFloder, params.satFloder,...
+    params.mapFloder);
+[params.validXfile, params.validYfile] = getDataSetFilePath(...
+    params.dataFloder, params.validFloder, params.satFloder,...
+    params.mapFloder);
+[params.testXfile, params.testYfile] = getDataSetFilePath(...
+    params.dataFloder, params.testFloder, params.satFloder,...
+    params.mapFloder);
 if params.debug
-%     params.osmFile = 'E:/wuhan/cug.osm';
-    params.osmFile = fullfile(params.dataFloder, '30.582128_30.588783_114.273462_114.290502.osm');
+    idx = 1:params.debugSize;
+    params.trainXfile = params.trainXfile(1,idx);
+    params.trainYfile = params.trainYfile(1,idx);
+    params.validXfile = params.validXfile(1,idx);
+    params.validYfile = params.validYfile(1,idx);
+    params.testXfile = params.testXfile(1,idx);
+    params.testYfile = params.testYfile(1,idx);
+end
+params.trainImgNum = size(params.trainXfile,2);
+params.m = params.trainImgNum * params.data_per_img;
+
+%% Load Img.
+params.trainXYimg = loadXYFile(params.trainXfile, params.trainYfile);
+params.validXYimg = loadXYFile(params.validXfile, params.validYfile);
+params.testXYimg = loadXYFile(params.testXfile, params.testYfile);
+
+%% Calculate the mean of X among entire dataset.
+params.cachepreMeanFile = fullfile(params.cacheFloder, 'premu.mat');
+if ~params.restart && exist(params.cachepreMeanFile, 'file')
+    load(params.cachepreMeanFile);
+    params.premu = premu;
+    clear premu;
 else
-    params.osmFile = fullfile(params.dataFloder, 'wuhan.osm');
+    premu = calpreMean(params.trainXYimg... 
+        , params.WindowSize, params.StrideSize);
+    premu = [premu; ...
+        calpreMean(params.validXYimg, params.WindowSize, params.StrideSize)];
+    premu = [premu; ...
+        calpreMean(params.testXYimg, params.WindowSize, params.StrideSize)];
+    premu = mean(premu);
+    params.premu = premu;
+    save(params.cachepreMeanFile, 'premu');
+    clear premu;
 end
 
-% The whole OSM area
-% if params.debug
-%     params.lat_south = 30.4969053;
-%     params.lat_north = 30.562261;
-%     params.lon_west = 114.3463898;
-%     params.lon_east = 114.4294739;
-% else
-%     params.lat_south = 29.9828;
-%     params.lat_north = 31.3703;
-%     params.lon_west = 113.6994;
-%     params.lon_east = 115.0869;
-% end
-[params.lat_south, params.lat_north, params.lon_west, params.lon_east]=...,
-    loadOSMRange(params.osmFile);
+%% Calculate the std of X among the entire dataset.
+params.cachepreStdFile = fullfile(params.cacheFloder, 'presigma.mat');
+if ~params.restart && exist(params.cachepreStdFile, 'file')
+    load(params.cachepreStdFile, 'presigma');
+    params.presigma = presigma;
+    clear presigma;
+else
+    presigma = calpreStd(params.trainXYimg... 
+        , params.WindowSize, params.StrideSize, params.premu);
+    presigma = [presigma; ...
+        calpreStd(params.validXYimg, params.WindowSize, params.StrideSize, params.premu)];
+    presigma = [presigma; ...
+        calpreStd(params.testXYimg, params.WindowSize, params.StrideSize, params.premu)];
+    presigma = sqrt(mean(presigma));
+    params.presigma = presigma;
+    save(params.cachepreStdFile, 'presigma');
+    clear presigma;
+end
 
-params.z = 19;
+%% Calculate the pca Ureduce Matrix.
 
-params.filegroup = 10000;
-
-% cache file
-if params.debug
-%     params.cacheOSM = 'E:/wuhan/cugOSM.mat';
-%     params.cacheOSMMat = 'E:/wuhan/cugOSMMat.mat';
-%     params.cacheExtendOSM = 'E:/wuhan/cugExtendOSMMat.mat';
-    params.cacheOSM = fullfile(params.dataFloder, 'hustOSM.mat');
-    params.cacheOSMMat = fullfile(params.dataFloder, 'hustOSMMat.mat');
-    params.cacheExtendOSM = fullfile(params.dataFloder, 'hustExtendOSMMat.mat');
-    params.cacheBingMapMat = fullfile(params.dataFloder, 'BingMap_HUST.mat');
-    params.cacheBingImage = fullfile(params.dataFloder, 'BingMap_HUST.jpg');
-    params.cacheOSMImage = fullfile(params.dataFloder, 'osmMap_HUST.jpg');
-    params.cacheRawXMat = fullfile(params.dataFloder, 'RawX.mat');
-    params.cacheRawYMat = fullfile(params.dataFloder, 'RawY.mat');
-    params.cacheThetaMat = fullfile(params.dataFloder, 'Theta.mat');
-    params.cachePredOSMMat = fullfile(params.dataFloder, 'PredOSM.mat');
-    params.cachePredOSMImage = fullfile(params.dataFloder, 'PredOSM.jpg');
+params.cacheUreduceFile = fullfile(params.cacheFloder, 'Ureduce.mat');
+if ~params.restart && exist(params.cacheUreduceFile, 'file')
+    load(params.cacheUreduceFile, 'Ureduce');
+    params.Ureduce = Ureduce;
+    clear Ureduce;
+    load(params.cacheUreduceFile, 'S');
+    params.S = S;
+    clear S;
+    load(params.cacheUreduceFile, 'per');
+    fprintf('The remaining covariance is %f.\n', per);
+else
+    sig = calCov(params.trainXYimg... 
+        , params.WindowSize, params.StrideSize, params.premu, params.presigma);
+    sig = sig + calCov(params.validXYimg,...
+        params.WindowSize, params.StrideSize, params.premu, params.presigma);
+    sig = sig + calCov(params.testXYimg,...
+        params.WindowSize, params.StrideSize, params.premu, params.presigma);
+    sig = sig/3;
+    sig = single(sig);
+    [U, S, ~] = svd(sig);
+    U = double(U);
+    S = double(S);
+    Ureduce = U(:,1:params.reduce);
     
+    params.Ureduce = Ureduce;
+    S = diag(S);
+    per = sum(S(1:4096))/sum(S);
+    fprintf('The remaining covariance is %f', per);
+    save(params.cacheUreduceFile, 'U', 'Ureduce', 'S', 'per');
+    clear U;
+end
+
+
+%% Calculate the post mean after PCA reduce.
+params.cachepostMeanFile = fullfile(params.cacheFloder, 'postmu.mat');
+if ~params.restart && exist(params.cachepostMeanFile, 'file')
+    load(params.cachepostMeanFile);
+    params.postmu = postmu;
+    clear postmu;
 else
-    params.cacheOSM = 'E:/wuhan/wuhanOSM.mat';
-    params.cacheOSMMat = 'E:/wuhan/wuhanOSMMat.mat';
-    params.cacheExtendOSM = 'E:/wuhan/wuhanExtendOSMMat.mat';
+    postmu = calpostMean(params.trainXYimg... 
+        , params.WindowSize, params.StrideSize...
+        , params.premu, params.presigma, params.Ureduce);
+    postmu = [postmu; ...
+        calpostMean(params.validXYimg, params.WindowSize, params.StrideSize...
+        , params.premu, params.presigma, params.Ureduce)];
+    postmu = [postmu; ...
+        calpostMean(params.testXYimg, params.WindowSize, params.StrideSize...
+        , params.premu, params.presigma, params.Ureduce)];
+    postmu = mean(postmu);
+    params.postmu = postmu;
+    save(params.cachepostMeanFile, 'postmu');
+    clear postmu;
 end
 
-params.threshold = 1e-4;
-% The image size with same width and height.
-params.imgSize = 256;
-
-% x,y stands for the min-max lontitude pixel(column) and m,n stands for
-% the min-max latitude pixel(row).
-[params.x, params.m] = latlon2p(params.lat_north, params.lon_west,params.z);
-[params.y, params.n] = latlon2p(params.lat_south, params.lon_east,params.z);
-% To let the area pixel coordinate start with the multiple of imgSize
-% index.
-params.x = params.x + (params.imgSize - mod(params.x, params.imgSize));
-params.m = params.m + (params.imgSize - mod(params.m, params.imgSize));
-params.y = params.y - mod(params.y, params.imgSize);
-params.n = params.n - mod(params.n, params.imgSize);
-% The area pixel Matrix size.
-params.numRows = params.n - params.m;
-params.numColumns = params.y - params.x;
-
-% % set the data split to train and test on 
-% params.split = 2;
-% 
-% % set the number of first layer CNN filters
-% params.numFilters = 128;
-% 
-% % set the number of RNN to use
-% params.numRNN = 64;
-% 
-% % use depth or rgb information
-% params.depth = false;
-% 
-% % use extra features from segmentation mask
-% params.extraFeatures = true;
+%% Calculate the post std after PCA reduce.
+params.cachepostStdFile = fullfile(params.cacheFloder, 'postsigma.mat');
+if ~params.restart && exist(params.cachepostStdFile, 'file')
+    load(params.cachepostStdFile);
+    params.postsigma = postsigma;
+    clear postsigma;
+else
+    postsigma = calpostStd(params.trainXYimg... 
+        , params.WindowSize, params.StrideSize...
+        , params.premu, params.presigma, params.Ureduce, params.postmu);
+    postsigma = [postsigma; ...
+        calpostStd(params.validXYimg, params.WindowSize, params.StrideSize...
+        , params.premu, params.presigma, params.Ureduce, params.postmu)];
+    postsigma = [postsigma; ...
+        calpostStd(params.testXYimg, params.WindowSize, params.StrideSize...
+        , params.premu, params.presigma, params.Ureduce, params.postmu)];
+    postsigma = sqrt(mean(postsigma));
+    params.postsigma = postsigma;
+    save(params.cachepostStdFile, 'postsigma');
+    clear postsigma;
 end
+
+disp(params);
+
+%% Generate the random Index to use the Raw Img Data.
+[params.imgIdx, params.imgDataIdx] = randIdx(params);
+params.currentImgIdx = 1;
+params.currentImgDataIdx = 1;
+
+
+
+end
+
