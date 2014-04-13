@@ -74,6 +74,12 @@ for i = 1 : opts.numepochs
         
         g_c1 = g_v1' * g_h1;
         g_c2 = g_v2' * g_h2;
+        
+        temp = sum(sum((g_v1-g_v2).^2))/g_batchsize;
+        if isnan(temp)
+            disp(['mini-batch', num2str(l) '/' num2str(numbatches) '.Average reconstruction error: ' num2str(gather(temp))]);
+        end
+            
 
 %         g_vb = g_momentum * g_vb + g_alpha * sum(g_v1 - g_v2)/g_batchsize;
 %         err = err + sum(sum((g_v1 - g_v2) .^ 2)) / g_batchsize;
@@ -101,7 +107,7 @@ for i = 1 : opts.numepochs
         g_W = g_W + g_vW;
         g_b = g_b + g_vb;
 %             g_c = g_c + g_vc;
-        temp = sum(sum((g_v1-g_v2).^2))/g_batchsize;
+
         disp(['mini-batch', num2str(l) '/' num2str(numbatches) '.Average reconstruction error: ' num2str(gather(temp))]);
         err = err + temp;
 %         err = err + sum(sum((g_v1 - g_v2) .^ 2)) / g_batchsize;
