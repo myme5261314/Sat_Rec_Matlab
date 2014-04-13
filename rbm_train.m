@@ -101,7 +101,7 @@ for i = 1 : opts.numepochs
         g_W = g_W + g_vW;
         g_b = g_b + g_vb;
 %             g_c = g_c + g_vc;
-        temp = sum(sum(g_v1-g_v2.^2))/g_batchsize;
+        temp = sum(sum((g_v1-g_v2).^2))/g_batchsize;
         disp(['mini-batch', num2str(l) '/' num2str(numbatches) '.Average reconstruction error: ' num2str(gather(temp))]);
         err = err + temp;
 %         err = err + sum(sum((g_v1 - g_v2) .^ 2)) / g_batchsize;
