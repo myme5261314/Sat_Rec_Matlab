@@ -3,7 +3,7 @@ function params = initParams()
 
 %% Init params configuration
 params.debug = 1;
-params.debugSize = 10;
+params.debugSize = 40;
 params.portion = 0.001;
 
 params.restart = 0;
@@ -33,7 +33,7 @@ params.mapFloder = 'Map';
 params.cacheFloder = fullfile(params.dataFloder, 'cache');
 params.cacheRBM = fullfile(params.cacheFloder, 'rbm.mat');
 params.cacheNN = fullfile(params.cacheFloder, 'nn.mat');
-
+params.cacheTestY = fullfile(params.cacheFloder, 'testy.mat');
 %% Get Data File path.
 [params.trainXfile, params.trainYfile] = getDataSetFilePath(...
     params.dataFloder, params.trainFloder, params.satFloder,...
@@ -48,6 +48,7 @@ if params.debug
     idx = 1:params.debugSize;
     params.trainXfile = params.trainXfile(1,idx);
     params.trainYfile = params.trainYfile(1,idx);
+    idx = 1:5;
     params.validXfile = params.validXfile(1,idx);
     params.validYfile = params.validYfile(1,idx);
     params.testXfile = params.testXfile(1,idx);
