@@ -85,40 +85,46 @@ for i=1:numepochs
         
         
         err(i,1) = sum(sum(delta3.^2));
-        g_Theta2_grad = delta3*A2'/g_batchsize;
-        clear  delta3 A2;
-%         wait(gpu);
-        g_Theta2_grad = g_alpha*(g_Theta2_grad/g_batchsize + g_L2* [gpuArray.zeros(size(g_Theta2,1),1,'single') g_Theta2(:,2:end)]);
-        g_vTheta2 = g_vTheta2*g_momentum + g_Theta2_grad;
-        g_Theta2 = g_Theta2 - g_vTheta2;
-        clear g_Theta2_grad;
-%         wait(gpu);
-        g_vTheta1 = g_vTheta1*g_momentum;
         g_Theta1_grad = delta2*batchX;
-%         g_Theta1_grad = g_Theta1_grad/g_batchsize;
-%         g_Theta1_grad = delta2*batchX/g_batchsize;
-%         disp(gpu.FreeMemory);
-        clear batchX delta2;
-%         disp(gpu.FreeMemory);
-%         wait(gpu);
-        g_Theta1_grad = g_Theta1_grad * (g_alpha/g_batchsize);
-        g_temp = gpuArray.zeros(size(g_Theta1),'single');
-        g_temp(:,2:end) = g_Theta1(:,2:end);
-%         g_temp = [gpuArray.zeros(size(g_Theta1,1),1) g_Theta1(:,2:end)];
-%         g_temp = g_Theta1;
-%         g_temp(:,1) = 0;
-        g_temp = g_temp * (g_alpha*g_L2);
-        g_Theta1_grad = g_Theta1_grad + g_temp;
-        clear g_temp;
-%         wait(gpu);
-%         g_vTheta1 = g_vTheta1*g_momentum;
-        g_vTheta1 = g_vTheta1 + g_Theta1_grad;
-        clear g_Theta1_grad;
-%         wait(gpu);
-        
-%         g_Theta1_grad = g_alpha*(g_Theta1_grad/g_batchsize + g_L2* [gpuArray.zeros(size(g_Theta1,1),1,'single') g_Theta1(:,2:end)]);
-%         g_vTheta1 = g_vTheta1*g_momentum + g_Theta1_grad;
+        g_Theta2_grad = delta3*A2';
+        g_vTheta1 = g_momentum*g_vTheta1 + g_alpha*(g_Theta1_grad/g_batchsize + g_L2*[gpuArray.zeros(size(g_Theta1,1),1,'single') g_Theta1(:,2:end)]);
         g_Theta1 = g_Theta1 - g_vTheta1;
+        g_vTheta2 = g_momentum*g_vTheta2 + g_alpha*(g_Theta2_grad/g_batchsize + g_L2*[gpuArray.zeros(size(g_Theta2,1),1,'single') g_Theta2(:,2:end)]);
+        g_Theta2 = g_Theta2 - g_vTheta2;
+%         g_Theta2_grad = delta3*A2'/g_batchsize;
+%         clear  delta3 A2;
+% %         wait(gpu);
+%         g_Theta2_grad = g_alpha*(g_Theta2_grad/g_batchsize + g_L2* [gpuArray.zeros(size(g_Theta2,1),1,'single') g_Theta2(:,2:end)]);
+%         g_vTheta2 = g_vTheta2*g_momentum + g_Theta2_grad;
+%         g_Theta2 = g_Theta2 - g_vTheta2;
+%         clear g_Theta2_grad;
+% %         wait(gpu);
+%         g_vTheta1 = g_vTheta1*g_momentum;
+%         g_Theta1_grad = delta2*batchX;
+% %         g_Theta1_grad = g_Theta1_grad/g_batchsize;
+% %         g_Theta1_grad = delta2*batchX/g_batchsize;
+% %         disp(gpu.FreeMemory);
+%         clear batchX delta2;
+% %         disp(gpu.FreeMemory);
+% %         wait(gpu);
+%         g_Theta1_grad = g_Theta1_grad * (g_alpha/g_batchsize);
+%         g_temp = gpuArray.zeros(size(g_Theta1),'single');
+%         g_temp(:,2:end) = g_Theta1(:,2:end);
+% %         g_temp = [gpuArray.zeros(size(g_Theta1,1),1) g_Theta1(:,2:end)];
+% %         g_temp = g_Theta1;
+% %         g_temp(:,1) = 0;
+%         g_temp = g_temp * (g_alpha*g_L2);
+%         g_Theta1_grad = g_Theta1_grad + g_temp;
+%         clear g_temp;
+% %         wait(gpu);
+% %         g_vTheta1 = g_vTheta1*g_momentum;
+%         g_vTheta1 = g_vTheta1 + g_Theta1_grad;
+%         clear g_Theta1_grad;
+% %         wait(gpu);
+%         
+% %         g_Theta1_grad = g_alpha*(g_Theta1_grad/g_batchsize + g_L2* [gpuArray.zeros(size(g_Theta1,1),1,'single') g_Theta1(:,2:end)]);
+% %         g_vTheta1 = g_vTheta1*g_momentum + g_Theta1_grad;
+%         g_Theta1 = g_Theta1 - g_vTheta1;
 
 
        
@@ -132,7 +138,10 @@ for i=1:numepochs
     str_perf = sprintf('; Full-batch train err = %f', gather(sum(err)));
     disp(['epoch ' num2str(i) '/' num2str(numepochs) '. Took ' num2str(t) ' seconds' '. Mini-batch mean squared error on training set is ' num2str(gather(mean(err))) str_perf]);
 end
-        
+nn.Theta1 = gather(g_Theta1);
+nn.Theta2 = gather(g_Theta2);
+nn.vTheta1 = gather(g_vTheta1);
+nn.vTheta2 = gather(g_vTheta2);
 
 end
 
