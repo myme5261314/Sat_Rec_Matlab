@@ -34,34 +34,18 @@ for i=1:numepochs
     currentPartIdx = 1;
     [g_cacheX, g_cacheY] = xyimgIdx2data(params, params.trainXYimg,...
         params.imgIdx(currentPartIdx), params.imgDataIdx(currentPartIdx,:));
+    currentPartIdx = currentPartIdx + 1;
+    [temp, tempY] = xyimgIdx2data(params, params.trainXYimg,...
+        params.imgIdx(currentPartIdx), params.imgDataIdx(currentPartIdx,:));
+    g_cacheX = [g_cacheX; temp];
     g_cacheX = gpuArray(g_cacheX);
-    g_cacheY = gpuArray(single(g_cacheY/255));
+    g_cacheY = [g_cacheY; tempY];
+    g_cacheY = gpuArray(g_cacheY);
+    clear temp;
     for l = 1 : numbatches
 %         tic;
-        dataidx = [(l-1)*opts.batchsize+1 l*opts.batchsize];
-        data_imgidx = ceil(dataidx/data_per_img);
-        data_dataidx = mod(dataidx-1, data_per_img)+1;
        %% Extract Raw Batch X,Y.
-        if all(data_imgidx == currentPartIdx)
-            batchX = g_cacheX(data_dataidx(1):data_dataidx(2),:);
-            batchY = g_cacheY(data_dataidx(1):data_dataidx(2),:);
-        else
-            currentPartIdx = data_imgidx(2);
-            tempX = g_cacheX(data_dataidx(1):end,:);
-            tempY = g_cacheY(data_dataidx(1):end,:);
-            % Update the cache to the next img data.
-            clear g_cacheX;
-            [g_cacheX, g_cacheY] = xyimgIdx2data(params, params.trainXYimg,...
-                params.imgIdx(currentPartIdx),...
-                params.imgDataIdx(currentPartIdx,:));
-            
-            g_cacheX = gpuArray(g_cacheX);
-            batchX = [tempX; g_cacheX(1:data_dataidx(2),:)];
-            clear tempX;
-            g_cacheY = gpuArray(single(g_cacheY/255));
-            batchY = [tempY; g_cacheY(1:data_dataidx(2),:)];
-            clear tempY;
-        end
+        [currentPartIdx, g_cacheX, g_cacheY, batchX, batchY] = getNextBatchX(g_cacheX, g_cacheY, currentPartIdx, params, opts);
        %% Preprocess the Raw Batch X.
         batchX = gpuArray(single(batchX));
         batchY = gpuArray(single(batchY));
@@ -149,3 +133,28 @@ end
 
 end
 
+
+function [partIdx, cacheX, cacheY, batchX, batchY] = getNextBatchX(cacheX, cacheY, partIdx, params, opts)
+    if size(cacheX,1)<=opts.batchsize
+        partIdx = partIdx+1;
+        [nextimgX, nextimgY] = xyimgIdx2data(params, params.trainXYimg,...
+                params.imgIdx(partIdx),...
+                params.imgDataIdx(partIdx,:));
+        nextimgX = gpuArray(nextimgX);
+        cacheX = [cacheX; nextimgX];
+        nextimgY = gpuArray(nextimgY);
+        cacheY = [cacheY; nextimgY];
+        partIdx = partIdx+1;
+        [nextimgX, nextimgY] = xyimgIdx2data(params, params.trainXYimg,...
+                params.imgIdx(partIdx),...
+                params.imgDataIdx(partIdx,:));
+        nextimgX = gpuArray(nextimgX);
+        cacheX = [cacheX; nextimgX];
+        nextimgY = gpuArray(nextimgY);
+        cacheY = [cacheY; nextimgY];
+    end
+    batchX = cacheX(1:opts.batchsize,:);
+    batchY = cacheY(1:opts.batchsize,:);
+    cacheX(1:opts.batchsize,:) = [];
+    cacheY(1:opts.batchsize,:) = [];
+end
