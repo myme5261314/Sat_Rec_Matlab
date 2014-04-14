@@ -128,6 +128,9 @@ for i=1:numepochs
 %         wait(gpu);
         
     end
+    t = toc;
+    str_perf = sprintf('; Full-batch train err = %f', gather(sum(err)));
+    disp(['epoch ' num2str(i) '/' num2str(numepochs) '. Took ' num2str(t) ' seconds' '. Mini-batch mean squared error on training set is ' num2str(gather(mean(err))) str_perf]);
 end
         
 
