@@ -30,20 +30,35 @@ else
     save(params.cacheNN, 'nn', '-v7.3');
 end
 
-test_img_num = size(params.testXYimg,2);
-predtesty = zeros(test_img_num*params.data_per_img, 256);
-for i=1:size(params.testXYimg,2)
-    [x, ~] = xyimgIdx2data(params, params.testXYimg, i);
-    x = [ ones(g_batchsize,1) x ];
-    Z2 = nn.Theta1 * x';
+if ~params.restart && exist(params.cacheTestY, 'file')
+    load(params.cacheTestY);
+else
+    test_img_num = size(params.testXYimg,2);
+    predtesty = zeros(test_img_num*params.data_per_img, 256);
+    for i=1:size(params.testXYimg,2)
+        [x, ~] = xyimgIdx2data(params, params.testXYimg, i);
+        x = single(x);
+        x = bsxfun(@rdivide, bsxfun(@minus, x, params.premu), params.presigma);
+        x = x * params.Ureduce;
+        x = bsxfun(@rdivide, bsxfun(@minus, x, params.postmu), params.postsigma);
+        x = [ ones(size(x,1),1) x ];
+        Z2 = nn.Theta1 * x';
 
-    A2 = sigm( Z2 );
-    A2 = [ ones(1,size(A2,2)) ; A2 ];
-%     Z2 = [ ones(1,size(Z2,2)) ; Z2 ];
-    idx = (i-1)*params.data_per_img:i*params.data_per_img;
-    predtesty(idx,:) = sigm( g_Theta2 * A2 );
+        A2 = sigm( Z2 );
+        A2 = [ ones(1,size(A2,2)) ; A2 ];
+    %     Z2 = [ ones(1,size(Z2,2)) ; Z2 ];
+        idx = ((i-1)*params.data_per_img+1):i*params.data_per_img;
+        predtesty(idx,:) = sigm( nn.Theta2 * A2 )';
+    end
+    save(params.cacheTestY, 'predtesty', '-v7.3');
 end
-save(params.cacheTestY, 'predtesty', '-v7.3');
+
+[ predyimgcell, thresholdlist ] = predy2img( params, predtesty );
+
+[precision, recall] = cal_precision_recall(params, params.testXYimg(:,2), predyimgcell, thresholdlist);
+
+figure;
+plot(recall, precision);
 
 end
 
