@@ -52,6 +52,7 @@ for i=1:numepochs
         batchX = bsxfun(@rdivide, bsxfun(@minus, batchX, g_premu), g_presigma);
         batchX = batchX * g_Ureduce;
         batchX = bsxfun(@rdivide, bsxfun(@minus, batchX, g_postmu), g_postsigma);
+        batchY = single(batchY==255);
        %% Perform forward propogation.
         batchX = [ gpuArray.ones(g_batchsize,1, 'single') batchX ];
         Z2 = g_Theta1 * batchX';
