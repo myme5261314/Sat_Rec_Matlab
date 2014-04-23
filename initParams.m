@@ -3,7 +3,7 @@ function params = initParams()
 
 %% Init params configuration
 params.debug = 1;
-params.debugSize = 40;
+params.debugSize = 10;
 params.portion = 0.001;
 
 params.restart = 0;
@@ -179,7 +179,7 @@ else
     clear postsigma;
 end
 
-disp(params);
+% disp(params);
 
 %% Generate the random Index to use the Raw Img Data.
 [params.imgIdx, params.imgDataIdx] = randIdx(params);

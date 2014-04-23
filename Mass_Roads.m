@@ -55,7 +55,7 @@ end
 
 [ predyimgcell, thresholdlist ] = predy2img( params, predtesty );
 
-[precision, recall] = cal_precision_recall(params, params.testXYimg(:,2), predyimgcell, thresholdlist);
+[precision, recall] = cal_precision_recall(params, predyimgcell, params.testXYimg(:,2), thresholdlist);
 
 figure;
 plot(recall, precision);
