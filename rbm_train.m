@@ -15,7 +15,7 @@ g_postsigma = gpuArray(rbm.postsigma);
 g_W = gpuArray(rbm.W);
 g_vW = gpuArray(rbm.vW);
 g_c = gpuArray(rbm.c);
-g_vc = gpuArray(rbm.vc);
+% g_vc = gpuArray(rbm.vc);
 g_b = gpuArray(rbm.b);
 g_vb = gpuArray(single(rbm.vb));
 
@@ -34,6 +34,7 @@ for i = 1 : opts.numepochs
 %         kk = randperm(m);
     err = gpuArray(0);
     %% cache X from two img and transfer it to GPU.
+    currentIdx = 1;
     currentPartIdx = 1;
     [g_cacheX, ~] = xyimgIdx2data(params, params.trainXYimg,...
         params.imgIdx(currentPartIdx), params.imgDataIdx(currentPartIdx,:));
@@ -49,8 +50,10 @@ for i = 1 : opts.numepochs
             tic;
         end
        %% Extract Raw Batch X.
-        [currentPartIdx, g_cacheX, batch] = getNextBatchX(g_cacheX, currentPartIdx, params, opts);
-        
+       
+        [currentPartIdx, g_cacheX, batch, currentIdx] = getNextBatchX(g_cacheX, currentPartIdx, params, opts, currentIdx);
+       
+%         batch = gpuArray.rand(g_batchsize, 12288);
         batch = single(batch);
         batch = gpuArray(batch);
        %% Preprocess the Raw Batch X.
@@ -59,67 +62,90 @@ for i = 1 : opts.numepochs
         batch = bsxfun(@rdivide, bsxfun(@minus, batch, g_postmu), g_postsigma);
 
         g_v1 = batch;
-        if checkNaN_Inf_flag && checkNaN_Inf(g_v1) || checkThresholdF(g_v1)
-            disp('g_v1 failed!');
-        end
-        g_h1 = sigmrnd(bsxfun(@plus, g_c, g_v1*g_W));
+%         if checkNaN_Inf_flag && checkNaN_Inf(g_v1) || checkThresholdF(g_v1)
+%             disp('g_v1 failed!');
+%         end
+        g_h1 = sigm(bsxfun(@plus, g_c, g_v1*g_W));
+        g_c1 = g_v1' * g_h1;
+        g_h1 = single(g_h1 > gpuArray.rand(size(g_h1), 'single'));
 %             g_v2 = sigmrnd(bsxfun(@plus, g_b', g_h1*g_W));
 %             g_v2 = gpuArray(zeros(size(g_v1),'single'));
-        if checkNaN_Inf_flag && checkNaN_Inf(g_h1) || checkThresholdF(g_h1)
-            disp('g_h1 failed!');
-        end
-        g_v2 = normrnd( bsxfun(@plus, g_b, g_h1*g_W'), 1 );
-        if checkNaN_Inf_flag && checkNaN_Inf(g_v2) || checkThresholdF(g_v2)
-            disp('g_v2 failed!');
-        end
+%         if checkNaN_Inf_flag && checkNaN_Inf(g_h1) || checkThresholdF(g_h1)
+%             disp('g_h1 failed!');
+%         end
+        g_v2 = bsxfun(@plus, g_b, g_h1*g_W') + gpuArray.randn(size(g_v1));
+        clear g_h1;
+%         if checkNaN_Inf_flag && checkNaN_Inf(g_v2) || checkThresholdF(g_v2)
+%             disp('g_v2 failed!');
+%         end
         g_h2 = sigm(bsxfun(@plus, g_c, g_v2*g_W));
-        if checkNaN_Inf_flag && checkNaN_Inf(g_h2) || checkThresholdF(g_h2)
-            disp('g_h2 failed!');
-        end
-        g_c1 = g_v1' * g_h1;
-        if checkNaN_Inf_flag && checkNaN_Inf(g_v1) || checkThresholdF(g_c1)
-            disp('g_c1 failed!');
-        end
-        g_c2 = g_v2' * g_h2;
-        if checkNaN_Inf_flag && checkNaN_Inf(g_c2) || checkThresholdF(g_c2)
-            disp('g_c2 failed!');
-        end
+%         if checkNaN_Inf_flag && checkNaN_Inf(g_h2) || checkThresholdF(g_h2)
+%             disp('g_h2 failed!');
+%         end
+        
+%         if checkNaN_Inf_flag && checkNaN_Inf(g_v1) || checkThresholdF(g_c1)
+%             disp('g_c1 failed!');
+%         end
+%         g_c2 = g_v2' * g_h2;
+%         clear g_h2;
+%         g_c1 = bsxfun(@minus, g_c1, g_c2);
+        g_c1 = g_c1 - g_v2' * g_h2;
+%         clear g_c2;
+%         if checkNaN_Inf_flag && checkNaN_Inf(g_c2) || checkThresholdF(g_c2)
+%             disp('g_c2 failed!');
+%         end
         
         err_temp = sum(mean((g_v1-g_v2).^2));
-        if checkNaN_Inf_flag && checkNaN_Inf(err_temp)
-            disp('err_temp failed!');
-        end
-        if isnan(err_temp)
-            disp(['mini-batch', num2str(l) '/' num2str(numbatches) '.Average reconstruction error: ' num2str(gather(err_temp))]);
-        end
+%         if checkNaN_Inf_flag && checkNaN_Inf(err_temp)
+%             disp('err_temp failed!');
+%         end
+%         if isnan(err_temp)
+%             disp(['mini-batch', num2str(l) '/' num2str(numbatches) '.Average reconstruction error: ' num2str(gather(err_temp))]);
+%         end
             
 
-
-        g_vW = g_momentum * g_vW + g_alpha * ( (g_c1-g_c2)/g_batchsize - g_L2*g_W );
-        if checkNaN_Inf_flag && checkNaN_Inf(g_vW) || checkThresholdF(g_vW)
-            disp('g_vW failed!');
-        end
+%         g_vW = bsxfun(@plus, bsxfun(@times, g_vW, g_momentum), bsxfun(@times,...
+%                 bsxfun(@minus, bsxfun(@rdivide, g_c1, g_batchsize),...
+%                 bsxfun(@times, g_W, g_L2)), g_alpha));
+%         g_vW = bsxfun(@times, g_vW, g_momentum);
+%         g_c1 = bsxfun(@rdivide, g_c1, g_batchsize);
+%         g_c1 = bsxfun(@minus, g_c1, bsxfun(@times, g_W, g_L2));
+%         g_c1 = bsxfun(@times, g_c1, g_alpha);
+%         g_vW = bsxfun(@plus, g_vW, g_c1);
+%         g_vW = g_vW * g_momentum;
+%         g_c1 = g_c1/g_batchsize;
+%         g_c1 = g_c1 - g_W * g_L2;
+%         g_c1 = g_alpha * g_c1;
+%         g_vW = g_vW + g_c1;
+%         clear g_c1;
+        g_vW = g_momentum * g_vW;
+        g_c1 = g_c1/g_batchsize;
+        g_vW = g_vW + g_alpha * ( g_c1 - g_L2*g_W );
+%         clear g_c1;
+%         if checkNaN_Inf_flag && checkNaN_Inf(g_vW) || checkThresholdF(g_vW)
+%             disp('g_vW failed!');
+%         end
 %         toc;
-        g_vb = g_momentum * g_vb + g_alpha * sum(g_v1 - g_v2)/g_batchsize;
-        if checkNaN_Inf_flag && checkNaN_Inf(g_vb) || checkThresholdF(g_vb)
-            disp('g_vb failed!');
-        end
+        g_vb = g_momentum * g_vb + g_alpha * mean(g_v1 - g_v2);
+%         if checkNaN_Inf_flag && checkNaN_Inf(g_vb) || checkThresholdF(g_vb)
+%             disp('g_vb failed!');
+%         end
 %             g_vc = rbm.momentum * g_vc + rbm.alpha * sum(g_h1 - g_h2)' / opts.batchsize;
 
         g_W = g_W + g_vW;
-        if checkNaN_Inf_flag && checkNaN_Inf(g_W) || checkThresholdF(g_W)
-            disp('g_W failed!');
-        end
+%         if checkNaN_Inf_flag && checkNaN_Inf(g_W) || checkThresholdF(g_W)
+%             disp('g_W failed!');
+%         end
         g_b = g_b + g_vb;
-        if checkNaN_Inf_flag && checkNaN_Inf(g_b) || checkThresholdF(g_b)
-            disp('g_b failed!');
-        end
+%         if checkNaN_Inf_flag && checkNaN_Inf(g_b) || checkThresholdF(g_b)
+%             disp('g_b failed!');
+%         end
 %             g_c = g_c + g_vc;
         batch_err(mod(l,1000)+1) = err_temp;
         err = err + err_temp;
-        if checkNaN_Inf(err)
-            disp('err failed!');
-        end
+%         if checkNaN_Inf(err)
+%             disp('err failed!');
+%         end
         if mod(l,1000) == 0
             toc;
             disp(['mini-batch', num2str(l) '/' num2str(numbatches) '.Average reconstruction error: ' num2str(gather(mean(batch_err)))]);
@@ -128,6 +154,7 @@ for i = 1 : opts.numepochs
 % %             err = err + gather(sum(sum((g_v1 - g_v2) .^ 2))) / opts.batchsize;
 %         toc;
 
+
     end
     toc(t1);
     disp(['epoch ' num2str(i) '/' num2str(opts.numepochs)  '. Average reconstruction error is: ' num2str(gather(err) / numbatches)]);
@@ -135,8 +162,8 @@ for i = 1 : opts.numepochs
 
 rbm.W = gather(g_W);
 rbm.vW = gather(g_vW);
-rbm.c = gather(g_c);
-rbm.vc = gather(g_vc);
+% rbm.c = gather(g_c);
+% rbm.vc = gather(g_vc);
 rbm.b = gather(g_b);
 rbm.vb = gather(g_vb);
 
@@ -144,8 +171,10 @@ end
 
 end
 
-function [partIdx, cacheX, batchx] = getNextBatchX(cacheX, partIdx, params, opts)
-    if size(cacheX,1)<=opts.batchsize
+function [partIdx, cacheX, batchx, Idx] = getNextBatchX(cacheX, partIdx, params, opts, Idx)
+    if size(cacheX,1)<=Idx+opts.batchsize-1
+        cacheX(1:Idx-1,:) = [];
+        Idx = 1;
         partIdx = partIdx+1;
         [nextimgX, ~] = xyimgIdx2data(params, params.trainXYimg,...
                 params.imgIdx(partIdx),...
@@ -159,7 +188,8 @@ function [partIdx, cacheX, batchx] = getNextBatchX(cacheX, partIdx, params, opts
         nextimgX = gpuArray(nextimgX);
         cacheX = [cacheX; nextimgX];
     end
-    batchx = cacheX(1:opts.batchsize,:);
-    cacheX(1:opts.batchsize,:) = [];
+    batchx = cacheX(Idx:Idx+opts.batchsize-1,:);
+    Idx = Idx + opts.batchsize;
+%     cacheX(1:opts.batchsize,:) = [];
 end
 
