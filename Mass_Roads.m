@@ -33,9 +33,9 @@ end
 if ~params.restart && exist(params.cacheTestY, 'file')
     load(params.cacheTestY);
 else
-    test_img_num = size(params.testXYimg,2);
+    test_img_num = size(params.testXYimg,1);
     predtesty = zeros(test_img_num*params.data_per_img, 256);
-    for i=1:size(params.testXYimg,2)
+    for i=1:test_img_num
         [x, ~] = xyimgIdx2data(params, params.testXYimg, i);
         x = single(x);
         x = bsxfun(@rdivide, bsxfun(@minus, x, params.premu), params.presigma);
@@ -51,14 +51,15 @@ else
         predtesty(idx,:) = sigm( nn.Theta2 * A2 )';
     end
     save(params.cacheTestY, 'predtesty', '-v7.3');
+    
 end
 
 [ predyimgcell, thresholdlist ] = predy2img( params, predtesty );
+thresholdlist_new = (0:1e-2:1)';
 
-[precision, recall] = cal_precision_recall(params, predyimgcell, params.testXYimg(:,2), thresholdlist);
+[precision, recall] = cal_precision_recall(params, predyimgcell, params.testXYimg(:,2), thresholdlist_new);
 
 figure;
 plot(recall, precision);
 
 end
-

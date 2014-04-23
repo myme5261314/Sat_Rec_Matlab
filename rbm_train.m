@@ -12,6 +12,14 @@ g_Ureduce = gpuArray(rbm.Ureduce);
 g_postmu = gpuArray(rbm.postmu);
 g_postsigma = gpuArray(rbm.postsigma);
 
+if ~params.restart && exist(params.cacheEpochRBM, 'file')
+    load(params.cacheEpochRBM);
+    disp(['Finish Load Cach of Epoch-', num2str(epoch_cache)]);
+    epoch_start = epoch_cache+1;
+else
+    epoch_start = 1;
+end
+
 g_W = gpuArray(rbm.W);
 g_vW = gpuArray(rbm.vW);
 g_c = gpuArray(rbm.c);
@@ -27,12 +35,13 @@ g_alpha = gpuArray(single(rbm.alpha));
 % err = gpuArray(0);
 checkNaN_Inf_flag=1;
 checkNaN_Inf = @(mat) any(any(isinf(mat))) || any(any(isnan(mat)));
-checkThresholdF = @(mat) all(all(abs(mat)>1e6));
+checkThresholdF = @(mat) all(all(abs(mat)>1e30));
 
 for i = 1 : opts.numepochs
+    [params.imgIdx, params.imgDataIdx] = randIdx(params);
     t1 = tic;
 %         kk = randperm(m);
-    err = gpuArray(0);
+    err = gpuArray.zeros(numbatches,1, 'single');
     %% cache X from two img and transfer it to GPU.
     currentIdx = 1;
     currentPartIdx = 1;
@@ -44,9 +53,10 @@ for i = 1 : opts.numepochs
     g_cacheX = [g_cacheX; temp];
     g_cacheX = gpuArray(g_cacheX);
     clear temp;
+    small_batch_debug_size = 10000;
     for l = 1 : numbatches
-        if mod(l,1000) == 1
-            batch_err = gpuArray.zeros(1000,1,'single');
+        if mod(l,small_batch_debug_size) == 1
+            batch_err = gpuArray.zeros(small_batch_debug_size,1,'single');
             tic;
         end
        %% Extract Raw Batch X.
@@ -141,14 +151,22 @@ for i = 1 : opts.numepochs
 %             disp('g_b failed!');
 %         end
 %             g_c = g_c + g_vc;
-        batch_err(mod(l,1000)+1) = err_temp;
+        batch_err(mod(l,small_batch_debug_size)+1) = err_temp;
         err = err + err_temp;
 %         if checkNaN_Inf(err)
 %             disp('err failed!');
 %         end
-        if mod(l,1000) == 0
+        if mod(l,small_batch_debug_size) == 0
             toc;
-            disp(['mini-batch', num2str(l) '/' num2str(numbatches) '.Average reconstruction error: ' num2str(gather(mean(batch_err)))]);
+            nan_num = nnz(isnan(batch_err)|isinf(batch_err));
+            if nan_num~=0
+                disp(['NaN or Inf occur times: ', num2str(nan_num), '/', num2str(small_batch_debug_size)]);
+                if nan_num==numel(batch_err)
+                    disp('Need break');
+                end
+                batch_err(isnan(batch_err)|isnan(batch_err)) = [];
+            end
+            disp(['Epoch ', num2str(i), '- mini-batch: ', num2str(l) '/' num2str(numbatches) '.Average reconstruction error: ' num2str(gather(mean(batch_err)))]);
         end
 %         err = err + sum(sum((g_v1 - g_v2) .^ 2)) / g_batchsize;
 % %             err = err + gather(sum(sum((g_v1 - g_v2) .^ 2))) / opts.batchsize;
@@ -157,17 +175,28 @@ for i = 1 : opts.numepochs
 
     end
     toc(t1);
-    disp(['epoch ' num2str(i) '/' num2str(opts.numepochs)  '. Average reconstruction error is: ' num2str(gather(err) / numbatches)]);
+    nan_num = nnz(isnan(err)|isnan(err));
+    if nan_num~=0
+        disp(['NaN or Inf occur times: ', num2str(nan_num), '/', num2str(numbatches)]);
+        if nan_num==numel(err)
+            disp('Need break');
+        end
+        err(isnan(err)|isnan(err)) = [];
+    end
+    disp(['epoch ' num2str(i) '/' num2str(opts.numepochs)  '. Average reconstruction error is: ' num2str(gather(mean(err)))]);
 
 
-rbm.W = gather(g_W);
-rbm.vW = gather(g_vW);
-% rbm.c = gather(g_c);
-% rbm.vc = gather(g_vc);
-rbm.b = gather(g_b);
-rbm.vb = gather(g_vb);
+    rbm.W = gather(g_W);
+    rbm.vW = gather(g_vW);
+    rbm.c = gather(g_c);
+    rbm.vc = gather(g_vc);
+    rbm.b = gather(g_b);
+    rbm.vb = gather(g_vb);
 
-end
+    epoch_cache = i;
+    save(params.cacheEpochRBM, 'rbm', 'epoch_cache', '-v7.3');
+    disp(['cache result of epoch-', num2str(i)]);
+    end
 
 end
 

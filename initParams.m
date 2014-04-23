@@ -32,6 +32,7 @@ params.mapFloder = 'Map';
 
 params.cacheFloder = fullfile(params.dataFloder, 'cache');
 params.cacheRBM = fullfile(params.cacheFloder, 'rbm.mat');
+params.cacheEpochRBM = fullfile(params.cacheFloder, 'epochrbm.mat');
 params.cacheNN = fullfile(params.cacheFloder, 'nn.mat');
 params.cacheTestY = fullfile(params.cacheFloder, 'testy.mat');
 %% Get Data File path.
@@ -46,6 +47,8 @@ params.cacheTestY = fullfile(params.cacheFloder, 'testy.mat');
     params.mapFloder);
 if params.debug
     idx = 1:params.debugSize;
+    randidx = randperm(size(params.trainXfile,2));
+    idx = randidx(idx);
     params.trainXfile = params.trainXfile(1,idx);
     params.trainYfile = params.trainYfile(1,idx);
     idx = 1:5;
@@ -189,4 +192,3 @@ params.currentImgDataIdx = 1;
 
 
 end
-

@@ -4,6 +4,7 @@ function [ precision, recall ] = cal_precision_recall( params, predyimgcell, yim
 m = size(thresholdlist,1);
 precision = zeros(m,1);
 recall = zeros(m,1);
+disp(m);
 for i=1:m
     threshold = thresholdlist(i);
     [precision(i), recall(i)] = cal_precision_recall_threshold(params, predyimgcell, yimgcell, threshold);

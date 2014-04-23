@@ -3,18 +3,21 @@ function [ rbm ] = rbmsetup( params, hidden_layer_size, opts )
 %   Detailed explanation goes here
     n = params.reduce;
     rbm.precision = 'single';
+%     rbm.precision = 'double';
     if strcmp(rbm.precision, 'single')
         rbm.premu = single(params.premu);
         rbm.presigma = single(params.presigma);
         rbm.Ureduce = single(params.Ureduce);
         rbm.postmu = single(params.postmu);
         rbm.postsigma = single(params.postsigma);
+        rbm.precisionF = @(mat) single(mat);
     else
         rbm.premu = double(params.premu);
         rbm.presigma = double(params.presigma);
         rbm.Ureduce = double(params.Ureduce);
         rbm.postmu = double(params.postmu);
         rbm.postsigma = double(params.postsigma);
+        rbm.precisionF = @(mat) double(mat);
     end
     rbm.alpha = opts.alpha;
     rbm.momentum = opts.momentum;
@@ -34,4 +37,3 @@ function [ rbm ] = rbmsetup( params, hidden_layer_size, opts )
 %     rbm.vc = gpuArray(rbm.vc);
 
 end
-
