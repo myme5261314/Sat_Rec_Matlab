@@ -31,6 +31,7 @@ for i=1:numepochs
     tic;
     err = gpuArray.zeros(numbatches, 1);
     %% cache X from one img and transfer it to GPU.
+    currentIdx = 1;
     currentPartIdx = 1;
     [g_cacheX, g_cacheY] = xyimgIdx2data(params, params.trainXYimg,...
         params.imgIdx(currentPartIdx), params.imgDataIdx(currentPartIdx,:));
@@ -45,7 +46,7 @@ for i=1:numepochs
     for l = 1 : numbatches
 %         tic;
        %% Extract Raw Batch X,Y.
-        [currentPartIdx, g_cacheX, g_cacheY, batchX, batchY] = getNextBatchX(g_cacheX, g_cacheY, currentPartIdx, params, opts);
+        [currentPartIdx, g_cacheX, g_cacheY, batchX, batchY, currentIdx] = getNextBatchX(g_cacheX, g_cacheY, currentPartIdx, params, opts, currentIdx);
        %% Preprocess the Raw Batch X.
         batchX = gpuArray(single(batchX));
         batchY = gpuArray(single(batchY));
@@ -147,8 +148,11 @@ nn.vTheta2 = gather(g_vTheta2);
 end
 
 
-function [partIdx, cacheX, cacheY, batchX, batchY] = getNextBatchX(cacheX, cacheY, partIdx, params, opts)
+function [partIdx, cacheX, cacheY, batchX, batchY, Idx] = getNextBatchX(cacheX, cacheY, partIdx, params, opts, Idx)
     if size(cacheX,1)<=opts.batchsize
+        cacheX(1:Idx-1,:) = [];
+        cacheY(1:Idx-1,:) = [];
+        Idx = 1;
         partIdx = partIdx+1;
         [nextimgX, nextimgY] = xyimgIdx2data(params, params.trainXYimg,...
                 params.imgIdx(partIdx),...
@@ -168,6 +172,7 @@ function [partIdx, cacheX, cacheY, batchX, batchY] = getNextBatchX(cacheX, cache
     end
     batchX = cacheX(1:opts.batchsize,:);
     batchY = cacheY(1:opts.batchsize,:);
-    cacheX(1:opts.batchsize,:) = [];
-    cacheY(1:opts.batchsize,:) = [];
+    Idx = Idx + opts.batchsize;
+%     cacheX(1:opts.batchsize,:) = [];
+%     cacheY(1:opts.batchsize,:) = [];
 end

@@ -152,7 +152,7 @@ for i = 1 : opts.numepochs
 %         end
 %             g_c = g_c + g_vc;
         batch_err(mod(l,small_batch_debug_size)+1) = err_temp;
-        err = err + err_temp;
+        err(l) = err_temp;
 %         if checkNaN_Inf(err)
 %             disp('err failed!');
 %         end
@@ -188,8 +188,8 @@ for i = 1 : opts.numepochs
 
     rbm.W = gather(g_W);
     rbm.vW = gather(g_vW);
-    rbm.c = gather(g_c);
-    rbm.vc = gather(g_vc);
+%     rbm.c = gather(g_c);
+%     rbm.vc = gather(g_vc);
     rbm.b = gather(g_b);
     rbm.vb = gather(g_vb);
 
