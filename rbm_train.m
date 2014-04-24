@@ -204,18 +204,17 @@ function [partIdx, cacheX, batchx, Idx] = getNextBatchX(cacheX, partIdx, params,
     if size(cacheX,1)<=Idx+opts.batchsize-1
         cacheX(1:Idx-1,:) = [];
         Idx = 1;
-        partIdx = partIdx+1;
-        [nextimgX, ~] = xyimgIdx2data(params, params.trainXYimg,...
-                params.imgIdx(partIdx),...
-                params.imgDataIdx(partIdx,:));
-        nextimgX = gpuArray(nextimgX);
-        cacheX = [cacheX; nextimgX];
-        partIdx = partIdx+1;
-        [nextimgX, ~] = xyimgIdx2data(params, params.trainXYimg,...
-                params.imgIdx(partIdx),...
-                params.imgDataIdx(partIdx,:));
-        nextimgX = gpuArray(nextimgX);
-        cacheX = [cacheX; nextimgX];
+        for i=1:param.cacheImageNum
+            if partIdx>=numel(params.trainXfile)
+                break;
+            end
+            partIdx = partIdx+1;
+            [nextimgX, ~] = xyimgIdx2data(params, params.trainXYimg,...
+                    params.imgIdx(partIdx),...
+                    params.imgDataIdx(partIdx,:));
+            nextimgX = gpuArray(nextimgX);
+            cacheX = [cacheX; nextimgX];
+        end
     end
     batchx = cacheX(Idx:Idx+opts.batchsize-1,:);
     Idx = Idx + opts.batchsize;
