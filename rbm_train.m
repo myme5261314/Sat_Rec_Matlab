@@ -212,8 +212,12 @@ function [partIdx, cacheX, batchx, Idx] = getNextBatchX(cacheX, partIdx, params,
                 break;
             end
             partIdx = partIdx+1;
+            xyimg = params.trainXYimg(params.imgIdx(partIdx),:);
+            rand_angle = rand(1) * 360;
+            xyimg{1} = imrotate(xyimg{1}, rand_angle, 'crop');
+%             xyimg{2} = imrotate(xyimg{2}, rand_angle, 'crop');
             [nextimgX, ~] = xyimgIdx2data(params.data_per_img, params.WindowSize, params.StrideSize,...
-                    params.trainXYimg(params.imgIdx(partIdx),:),...
+                    xyimg,...
                     params.imgDataIdx(partIdx,:));
             nextimgX = gpuArray(nextimgX);
             cacheX = [cacheX; nextimgX];
