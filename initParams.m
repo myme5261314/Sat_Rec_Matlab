@@ -35,7 +35,10 @@ params.cacheRBM = fullfile(params.cacheFloder, 'rbm.mat');
 params.cacheEpochRBM = fullfile(params.cacheFloder, 'epochrbm.mat');
 params.cacheNN = fullfile(params.cacheFloder, 'nn.mat');
 params.cacheTestY = fullfile(params.cacheFloder, 'testy.mat');
+params.cacheTrainY = fullfile(params.cacheFloder, 'trainy.mat');
+
 params.cacheImageNum = 10;
+
 %% Get Data File path.
 [params.trainXfile, params.trainYfile] = getDataSetFilePath(...
     params.dataFloder, params.trainFloder, params.satFloder,...

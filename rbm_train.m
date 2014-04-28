@@ -6,6 +6,7 @@ m = params.trainImgNum * data_per_img;
 numbatches = m / opts.batchsize;
 numbatches = floor(numbatches);
 
+
 g_premu = gpuArray(rbm.premu);
 g_presigma = gpuArray(rbm.presigma);
 g_Ureduce = gpuArray(rbm.Ureduce);
@@ -37,7 +38,7 @@ checkNaN_Inf_flag=1;
 checkNaN_Inf = @(mat) any(any(isinf(mat))) || any(any(isnan(mat)));
 checkThresholdF = @(mat) all(all(abs(mat)>1e30));
 
-for i = 1 : opts.numepochs
+for i = epoch_start : opts.numepochs
     [params.imgIdx, params.imgDataIdx] = randIdx(params);
     t1 = tic;
 %         kk = randperm(m);
