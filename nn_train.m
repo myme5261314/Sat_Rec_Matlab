@@ -155,7 +155,7 @@ function [partIdx, cacheX, cacheY, batchX, batchY, Idx] = getNextBatchX(cacheX, 
         cacheX(1:Idx-1,:) = [];
         cacheY(1:Idx-1,:) = [];
         Idx = 1;
-        for i=1:param.cacheImageNum
+        for i=1:params.cacheImageNum
             if partIdx>=numel(params.trainXfile)
                 break;
             end

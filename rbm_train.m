@@ -207,7 +207,7 @@ function [partIdx, cacheX, batchx, Idx] = getNextBatchX(cacheX, partIdx, params,
     if size(cacheX,1)<=Idx+opts.batchsize-1
         cacheX(1:Idx-1,:) = [];
         Idx = 1;
-        for i=1:param.cacheImageNum
+        for i=1:params.cacheImageNum
             if partIdx>=numel(params.trainXfile)
                 break;
             end
