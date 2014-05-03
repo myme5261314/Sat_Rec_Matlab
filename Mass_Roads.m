@@ -165,6 +165,8 @@ thresholdlist_new = (0:1e-2:1)';
 disp('Start TrainSet precision and recall Stage');
 tic;
 [trainprecision, trainrecall] = cal_precision_recall(blank, predyimgcell, params.trainXYimg(:,2), thresholdlist_new);
+[p, r] = getBestPrecisionRecall(testprecision, testrecall);
+disp(['The best precision: ', num2str(p), '. And the best recall: ', num2str(r), '.']);
 toc;
 
 figure('Name', 'Train Set');
