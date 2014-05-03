@@ -105,6 +105,8 @@ disp('Start TestSet precision and recall Stage');
 tic;
 blank = (params.WindowSize-params.StrideSize)/2;
 [testprecision, testrecall] = cal_precision_recall(blank, predyimgcell, params.testXYimg(:,2), thresholdlist_new);
+[p, r] = getBestPrecisionRecall(testprecision, testrecall);
+disp(['The best precision: ', num2str(p), '. And the best recall: ', num2str(r), '.']);
 toc;
 
 figure('Name', 'Test Set');
@@ -174,4 +176,12 @@ save('precision_recall_rbm.mat', 'trainprecision', 'trainrecall', 'testprecision
 
 matlabpool close;
 
+end
+
+function [ p, r ] = getBestPrecisionRecall(precision, recall)
+    f1 = precision.*recall/(precision+recall);
+    f1(isnan(f1)) = -1;
+    [~, idx] = max(f1);
+    p = precision(idx);
+    r = recall(idx);
 end
