@@ -44,18 +44,9 @@ for i = epoch_start : opts.numepochs
 %         kk = randperm(m);
     err = gpuArray.zeros(numbatches,1, 'single');
     %% cache X from two img and transfer it to GPU.
-    currentIdx = 1;
-    currentPartIdx = 1;
-    [g_cacheX, ~] = xyimgIdx2data(params.data_per_img, params.WindowSize, params.StrideSize,...
-                    params.trainXYimg(params.imgIdx(currentPartIdx),:),...
-                    params.imgDataIdx(currentPartIdx,:));
-    currentPartIdx = currentPartIdx + 1;
-    [temp, ~] = xyimgIdx2data(params.data_per_img, params.WindowSize, params.StrideSize,...
-                    params.trainXYimg(params.imgIdx(currentPartIdx),:),...
-                    params.imgDataIdx(currentPartIdx,:));
-    g_cacheX = [g_cacheX; temp];
-    g_cacheX = gpuArray(g_cacheX);
-    clear temp;
+    currentIdx = 0;
+    currentPartIdx = 0;
+    g_cacheX = [];
     small_batch_debug_size = 10000;
     for l = 1 : numbatches
         if mod(l,small_batch_debug_size) == 1
@@ -214,11 +205,12 @@ function [partIdx, cacheX, batchx, Idx] = getNextBatchX(cacheX, partIdx, params,
             partIdx = partIdx+1;
             xyimg = params.trainXYimg(params.imgIdx(partIdx),:);
             rand_angle = rand(1) * 360;
-            xyimg{1} = imrotate(xyimg{1}, rand_angle, 'crop');
+            xyimg{1} = imrotate(xyimg{1}, rand_angle);
 %             xyimg{2} = imrotate(xyimg{2}, rand_angle, 'crop');
             [nextimgX, ~] = xyimgIdx2data(params.data_per_img, params.WindowSize, params.StrideSize,...
-                    xyimg,...
-                    params.imgDataIdx(partIdx,:));
+                    xyimg);
+            uselessDataIdx = findUselessData(nextimgX);
+            nextimgX(uselessDataIdx,:) = [];
             nextimgX = gpuArray(nextimgX);
             cacheX = [cacheX; nextimgX];
         end
@@ -226,5 +218,9 @@ function [partIdx, cacheX, batchx, Idx] = getNextBatchX(cacheX, partIdx, params,
     batchx = cacheX(Idx:Idx+opts.batchsize-1,:);
     Idx = Idx + opts.batchsize;
 %     cacheX(1:opts.batchsize,:) = [];
+end
+
+function [idx] = findUselessData(data)
+    idx = ~any(data,2);
 end
 
