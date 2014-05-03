@@ -71,7 +71,7 @@ else
     
     testXYimg = params.testXYimg;
     parfor i=1:test_img_num
-        [x, ~] = xyimgIdx2data(data_per_img, WindowSize, StrideSize, testXYimg{i,:});
+        [x, ~] = xyimgIdx2data(data_per_img, WindowSize, StrideSize, testXYimg(i,:));
         x = single(x);
         x = bsxfun(@rdivide, bsxfun(@minus, x, premu), presigma);
         x = x * Ureduce;
@@ -158,6 +158,8 @@ else
 end
 toc;
 
+data_per_img = params.data_per_img;
+datasize_per_img = params.datasize_per_img;
 [ predyimgcell ] = predy2img( data_per_img, datasize_per_img, predtrainy );
 clear predtrainy;
 thresholdlist_new = (0:1e-2:1)';
