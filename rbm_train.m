@@ -47,7 +47,11 @@ for i = epoch_start : opts.numepochs
     currentIdx = 0;
     currentPartIdx = 0;
     g_cacheX = [];
-    small_batch_debug_size = 10000;
+    if params.debug
+        small_batch_debug_size = 1000;
+    else
+        small_batch_debug_size = 10000;
+    end
     for l = 1 : 2*numbatches
         if mod(l,small_batch_debug_size) == 1
             batch_err = gpuArray.zeros(small_batch_debug_size,1,'single');
