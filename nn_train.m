@@ -35,10 +35,15 @@ for i=1:numepochs
     currentPartIdx = 0;
     g_cacheX = [];
     g_cacheY = [];
-    for l = 1 : numbatches
+    for l = 1 : 2*numbatches
 %         tic;
        %% Extract Raw Batch X,Y.
-        [currentPartIdx, g_cacheX, g_cacheY, batchX, batchY, currentIdx] = getNextBatchX(g_cacheX, g_cacheY, currentPartIdx, params, opts, currentIdx);
+        if currentPartIdx>=params.trainImgNum && size(cacheX,1)<=currentIdx+opts.batchsize-1
+            break;
+        else
+            [currentPartIdx, g_cacheX, g_cacheY, batchX, batchY, currentIdx] = getNextBatchX(g_cacheX, g_cacheY, currentPartIdx, params, opts, currentIdx);
+        end
+        
        %% Preprocess the Raw Batch X.
         batchX = gpuArray(single(batchX));
         batchY = gpuArray(single(batchY));
@@ -146,7 +151,7 @@ function [partIdx, cacheX, cacheY, batchX, batchY, Idx] = getNextBatchX(cacheX, 
         cacheY(1:Idx-1,:) = [];
         Idx = 1;
         for i=1:params.cacheImageNum
-            if partIdx>=numel(params.trainXfile)
+            if partIdx>=params.cacheImageNum
                 break;
             end
             partIdx = partIdx+1;

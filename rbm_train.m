@@ -48,14 +48,17 @@ for i = epoch_start : opts.numepochs
     currentPartIdx = 0;
     g_cacheX = [];
     small_batch_debug_size = 10000;
-    for l = 1 : numbatches
+    for l = 1 : 2*numbatches
         if mod(l,small_batch_debug_size) == 1
             batch_err = gpuArray.zeros(small_batch_debug_size,1,'single');
             tic;
         end
        %% Extract Raw Batch X.
-       
-        [currentPartIdx, g_cacheX, batch, currentIdx] = getNextBatchX(g_cacheX, currentPartIdx, params, opts, currentIdx);
+        if currentPartIdx>=params.trainImgNum && size(cacheX,1)<=currentIdx+opts.batchsize-1
+            break;
+        else
+            [currentPartIdx, g_cacheX, batch, currentIdx] = getNextBatchX(g_cacheX, currentPartIdx, params, opts, currentIdx);
+        end
        
 %         batch = gpuArray.rand(g_batchsize, 12288);
         batch = single(batch);
@@ -190,7 +193,7 @@ for i = epoch_start : opts.numepochs
     epoch_cache = i;
     save(params.cacheEpochRBM, 'rbm', 'epoch_cache', '-v7.3');
     disp(['cache result of epoch-', num2str(i)]);
-    end
+end
 
 end
 
@@ -199,7 +202,7 @@ function [partIdx, cacheX, batchx, Idx] = getNextBatchX(cacheX, partIdx, params,
         cacheX(1:Idx-1,:) = [];
         Idx = 1;
         for i=1:params.cacheImageNum
-            if partIdx>=numel(params.trainXfile)
+            if partIdx>=params.trainImgNum
                 break;
             end
             partIdx = partIdx+1;

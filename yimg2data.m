@@ -26,7 +26,7 @@ for i=1:idxnum
     cidx = convertF(cidx);
     cidx = cidx:(cidx+stridesize-1);
     temp = img(ridx,cidx);
-    ydata(i,:) = temp(:);
+    ydata(i,:) = temp(:)';
 end
 
 end
