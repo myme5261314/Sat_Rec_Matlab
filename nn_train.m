@@ -38,7 +38,7 @@ for i=1:numepochs
     for l = 1 : 2*numbatches
 %         tic;
        %% Extract Raw Batch X,Y.
-        if currentPartIdx>=params.trainImgNum && size(cacheX,1)<=currentIdx+opts.batchsize-1
+        if currentPartIdx>=params.trainImgNum && size(g_cacheX,1)<=currentIdx+opts.batchsize-1
             break;
         else
             [currentPartIdx, g_cacheX, g_cacheY, batchX, batchY, currentIdx] = getNextBatchX(g_cacheX, g_cacheY, currentPartIdx, params, opts, currentIdx);
