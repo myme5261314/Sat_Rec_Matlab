@@ -156,7 +156,7 @@ function [partIdx, cacheX, cacheY, batchX, batchY, Idx] = getNextBatchX(cacheX, 
             xyimg{2} = imrotate(xyimg{2}, rand_angle);
             [nextimgX, nextimgY] = xyimgIdx2data(params.data_per_img, params.WindowSize, params.StrideSize,...
                     xyimg);
-            uselessDataIdx = findUselessData(nextimgX);
+            uselessDataIdx = findUselessData(nextimgX, params.WindowSize, params.StrideSize);
             nextimgX(uselessDataIdx,:) = [];
             nextimgX = gpuArray(nextimgX);
             cacheX = [cacheX; nextimgX];
@@ -172,6 +172,19 @@ function [partIdx, cacheX, cacheY, batchX, batchY, Idx] = getNextBatchX(cacheX, 
 %     cacheY(1:opts.batchsize,:) = [];
 end
 
-function [idx] = findUselessData(data)
-    idx = ~any(data,2);
+function [idx] = findUselessData(data, WindowSize, StrideSize)
+    blank = (WindowSize - StrideSize)/2;
+    assert(rem(blank,1)==0, 'The blank should be integer, which actual is %f'...
+    , blank);
+    rowIdx = blank+1:blank+StrideSize;
+    colIdx = blank+1:blank+StrideSize;
+    newrowIdx = repmat(rowIdx, [1 StrideSize]);
+    newColIdx = zeros(1, StrideSize^2);
+    newColIdx(1,:) = colIdx(1,ceil((1:StrideSize^2)/StrideSize));
+    subIdx = zeros(1, 3*StrideSize^2);
+    matSize = [WindowSize WindowSize 3];
+    subIdx(1,1:StrideSize^2) = sub2ind(matSize, newrowIdx, newColIdx, 1);
+    subIdx(1, StrideSize^2+1:2*StrideSize^2) = sub2ind(matSize, newrowIdx, newColIdx, 2);
+    subIdx(1, 2*StrideSize^2+1:3*StrideSize^2) = sub2ind(matSize, newrowIdx, newColIdx, 3);
+    idx = ~any(data(:,subIdx),2);
 end

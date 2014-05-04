@@ -183,7 +183,7 @@ matlabpool close;
 end
 
 function [ p, r ] = getBestPrecisionRecall(precision, recall)
-    f1 = precision.*recall/(precision+recall);
+    f1 = precision.*recall./(precision+recall);
     f1(isnan(f1)) = -1;
     [~, idx] = max(f1);
     p = precision(idx);
