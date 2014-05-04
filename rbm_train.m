@@ -166,6 +166,7 @@ for i = epoch_start : opts.numepochs
                     disp('Need break');
                 end
                 batch_err(isnan(batch_err)|isnan(batch_err)) = [];
+                batch_err(batch_err==0)=[];
             end
             disp(['Epoch ', num2str(i), '- mini-batch: ', num2str(l) '/' num2str(numbatches) '.Average reconstruction error: ' num2str(gather(mean(batch_err)))]);
         end
@@ -183,6 +184,7 @@ for i = epoch_start : opts.numepochs
             disp('Need break');
         end
         err(isnan(err)|isnan(err)) = [];
+        err(err==0) = [];
     end
     disp(['epoch ' num2str(i) '/' num2str(opts.numepochs)  '. Average reconstruction error is: ' num2str(gather(mean(err)))]);
 
