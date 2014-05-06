@@ -101,6 +101,7 @@ for i = epoch_start : opts.numepochs
 %         clear g_h2;
 %         g_c1 = bsxfun(@minus, g_c1, g_c2);
         g_c1 = g_c1 - g_v2' * g_h2;
+        clear g_h2;
 %         clear g_c2;
 %         if checkNaN_Inf_flag && checkNaN_Inf(g_c2) || checkThresholdF(g_c2)
 %             disp('g_c2 failed!');
@@ -132,12 +133,13 @@ for i = epoch_start : opts.numepochs
         g_vW = g_momentum * g_vW;
         g_c1 = g_c1/g_batchsize;
         g_vW = g_vW + g_alpha * ( g_c1 - g_L2*g_W );
-%         clear g_c1;
+        clear g_c1;
 %         if checkNaN_Inf_flag && checkNaN_Inf(g_vW) || checkThresholdF(g_vW)
 %             disp('g_vW failed!');
 %         end
 %         toc;
         g_vb = g_momentum * g_vb + g_alpha * mean(g_v1 - g_v2);
+        clear g_v1 g_v2;
 %         if checkNaN_Inf_flag && checkNaN_Inf(g_vb) || checkThresholdF(g_vb)
 %             disp('g_vb failed!');
 %         end
@@ -213,7 +215,7 @@ function [partIdx, cacheX, batchx, Idx] = getNextBatchX(cacheX, partIdx, params,
             end
             partIdx = partIdx+1;
             xyimg = params.trainXYimg(params.imgIdx(partIdx),:);
-            rand_angle = rand(1) * 360;
+            rand_angle = 0 * 360;
             xyimg{1} = imrotate(xyimg{1}, rand_angle);
 %             xyimg{2} = imrotate(xyimg{2}, rand_angle, 'crop');
             [nextimgX, ~] = xyimgIdx2data(params.data_per_img, params.WindowSize, params.StrideSize,...
@@ -222,6 +224,7 @@ function [partIdx, cacheX, batchx, Idx] = getNextBatchX(cacheX, partIdx, params,
             nextimgX(uselessDataIdx,:) = [];
             nextimgX = gpuArray(nextimgX);
             cacheX = [cacheX; nextimgX];
+            clear nextimgX;
         end
     end
     batchx = cacheX(Idx:Idx+opts.batchsize-1,:);
