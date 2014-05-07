@@ -87,19 +87,19 @@ else
     params.testRotate = testRotate;
 end
 
-%% Rotate The Image.
-for i=1:params.trainImgNum
-    params.trainXYimg{i,1} = imrotate(params.trainXYimg{i,1}, params.trainRotate(i));
-    params.trainXYimg{i,2} = imrotate(params.trainXYimg{i,2}, params.trainRotate(i));
-end
-for i=1:size(params.validXfile, 2)
-    params.validXYimg{i,1} = imrotate(params.validXYimg{i,1}, params.validRotate(i));
-    params.validXYimg{i,2} = imrotate(params.validXYimg{i,2}, params.validRotate(i));
-end
-for i=1:size(params.testXfile, 2)
-    params.testXYimg{i,1} = imrotate(params.testXYimg{i,1}, params.testRotate(i));
-    params.testXYimg{i,2} = imrotate(params.testXYimg{i,2}, params.testRotate(i));
-end
+% %% Rotate The Image.
+% for i=1:params.trainImgNum
+%     params.trainXYimg{i,1} = imrotate(params.trainXYimg{i,1}, params.trainRotate(i));
+%     params.trainXYimg{i,2} = imrotate(params.trainXYimg{i,2}, params.trainRotate(i));
+% end
+% for i=1:size(params.validXfile, 2)
+%     params.validXYimg{i,1} = imrotate(params.validXYimg{i,1}, params.validRotate(i));
+%     params.validXYimg{i,2} = imrotate(params.validXYimg{i,2}, params.validRotate(i));
+% end
+% for i=1:size(params.testXfile, 2)
+%     params.testXYimg{i,1} = imrotate(params.testXYimg{i,1}, params.testRotate(i));
+%     params.testXYimg{i,2} = imrotate(params.testXYimg{i,2}, params.testRotate(i));
+% end
     
 
 %% Calculate the mean of X among entire dataset.
