@@ -3,7 +3,7 @@ function params = initParams()
 
 %% Init params configuration
 params.debug = 1;
-params.debugSize = 10;
+params.debugSize = 100;
 params.portion = 0.001;
 
 params.restart = 0;
@@ -37,7 +37,7 @@ params.cacheNN = fullfile(params.cacheFloder, 'nn.mat');
 params.cacheTestY = fullfile(params.cacheFloder, 'testy.mat');
 params.cacheTrainY = fullfile(params.cacheFloder, 'trainy.mat');
 
-params.cacheImageNum = 10;
+params.cacheImageNum = 5;
 
 %% Get Data File path.
 [params.trainXfile, params.trainYfile] = getDataSetFilePath(...
@@ -128,8 +128,11 @@ else
         params.WindowSize, params.StrideSize, params.premu, params.presigma);
     sig = sig/3;
     sig = single(sig);
+    sig = gpuArray(sig);
     [U, S, ~] = svd(sig);
+    U = gather(U);
     U = double(U);
+    S = gather(S);
     S = double(S);
     Ureduce = U(:,1:params.reduce);
     

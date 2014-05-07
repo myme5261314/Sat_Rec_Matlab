@@ -44,26 +44,20 @@ for i = epoch_start : opts.numepochs
 %         kk = randperm(m);
     err = gpuArray.zeros(numbatches,1, 'single');
     %% cache X from two img and transfer it to GPU.
-    currentIdx = 1;
-    currentPartIdx = 1;
-    [g_cacheX, ~] = xyimgIdx2data(params.data_per_img, params.WindowSize, params.StrideSize,...
-                    params.trainXYimg(params.imgIdx(currentPartIdx),:),...
-                    params.imgDataIdx(currentPartIdx,:));
-    currentPartIdx = currentPartIdx + 1;
-    [temp, ~] = xyimgIdx2data(params.data_per_img, params.WindowSize, params.StrideSize,...
-                    params.trainXYimg(params.imgIdx(currentPartIdx),:),...
-                    params.imgDataIdx(currentPartIdx,:));
-    g_cacheX = [g_cacheX; temp];
-    g_cacheX = gpuArray(g_cacheX);
-    clear temp;
-    small_batch_debug_size = 10000;
+    currentIdx = 0;
+    currentPartIdx = 0;
+    g_cacheX = [];
+    if params.debug
+        small_batch_debug_size = 1000;
+    else
+        small_batch_debug_size = 10000;
+    end
     for l = 1 : numbatches
         if mod(l,small_batch_debug_size) == 1
             batch_err = gpuArray.zeros(small_batch_debug_size,1,'single');
             tic;
         end
        %% Extract Raw Batch X.
-       
         [currentPartIdx, g_cacheX, batch, currentIdx] = getNextBatchX(g_cacheX, currentPartIdx, params, opts, currentIdx);
        
 %         batch = gpuArray.rand(g_batchsize, 12288);
@@ -103,6 +97,7 @@ for i = epoch_start : opts.numepochs
 %         clear g_h2;
 %         g_c1 = bsxfun(@minus, g_c1, g_c2);
         g_c1 = g_c1 - g_v2' * g_h2;
+        clear g_h2;
 %         clear g_c2;
 %         if checkNaN_Inf_flag && checkNaN_Inf(g_c2) || checkThresholdF(g_c2)
 %             disp('g_c2 failed!');
@@ -134,12 +129,13 @@ for i = epoch_start : opts.numepochs
         g_vW = g_momentum * g_vW;
         g_c1 = g_c1/g_batchsize;
         g_vW = g_vW + g_alpha * ( g_c1 - g_L2*g_W );
-%         clear g_c1;
+        clear g_c1;
 %         if checkNaN_Inf_flag && checkNaN_Inf(g_vW) || checkThresholdF(g_vW)
 %             disp('g_vW failed!');
 %         end
 %         toc;
         g_vb = g_momentum * g_vb + g_alpha * mean(g_v1 - g_v2);
+        clear g_v1 g_v2;
 %         if checkNaN_Inf_flag && checkNaN_Inf(g_vb) || checkThresholdF(g_vb)
 %             disp('g_vb failed!');
 %         end
@@ -169,6 +165,7 @@ for i = epoch_start : opts.numepochs
                 end
                 batch_err(isnan(batch_err)|isnan(batch_err)) = [];
             end
+            batch_err(batch_err==0)=[];
             disp(['Epoch ', num2str(i), '- mini-batch: ', num2str(l) '/' num2str(numbatches) '.Average reconstruction error: ' num2str(gather(mean(batch_err)))]);
         end
 %         err = err + sum(sum((g_v1 - g_v2) .^ 2)) / g_batchsize;
@@ -186,6 +183,7 @@ for i = epoch_start : opts.numepochs
         end
         err(isnan(err)|isnan(err)) = [];
     end
+    err(err==0) = [];
     disp(['epoch ' num2str(i) '/' num2str(opts.numepochs)  '. Average reconstruction error is: ' num2str(gather(mean(err)))]);
 
 
@@ -199,7 +197,7 @@ for i = epoch_start : opts.numepochs
     epoch_cache = i;
     save(params.cacheEpochRBM, 'rbm', 'epoch_cache', '-v7.3');
     disp(['cache result of epoch-', num2str(i)]);
-    end
+end
 
 end
 
@@ -208,7 +206,7 @@ function [partIdx, cacheX, batchx, Idx] = getNextBatchX(cacheX, partIdx, params,
         cacheX(1:Idx-1,:) = [];
         Idx = 1;
         for i=1:params.cacheImageNum
-            if partIdx>=numel(params.trainXfile)
+            if partIdx>=params.trainImgNum
                 break;
             end
             partIdx = partIdx+1;
@@ -217,6 +215,7 @@ function [partIdx, cacheX, batchx, Idx] = getNextBatchX(cacheX, partIdx, params,
                     params.imgDataIdx(partIdx,:));
             nextimgX = gpuArray(nextimgX);
             cacheX = [cacheX; nextimgX];
+            clear nextimgX;
         end
     end
     batchx = cacheX(Idx:Idx+opts.batchsize-1,:);

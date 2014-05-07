@@ -24,7 +24,7 @@ for i=1:idxnum
     cidx = convertF(cidx);
     cidx = cidx:(cidx+windowsize-1);
     temp = img(ridx,cidx,:);
-    xdata(i,:) = temp(:);
+    xdata(i,:) = temp(:)';
 end
 
 end

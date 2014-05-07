@@ -31,24 +31,15 @@ for i=1:numepochs
     tic;
     err = gpuArray.zeros(numbatches, 1);
     %% cache X from one img and transfer it to GPU.
-    currentIdx = 1;
-    currentPartIdx = 1;
-    [g_cacheX, g_cacheY] = xyimgIdx2data(params.data_per_img, params.WindowSize, params.StrideSize,...
-        params.trainXYimg(params.imgIdx(currentPartIdx),:),...
-        params.imgDataIdx(currentPartIdx,:));
-    currentPartIdx = currentPartIdx + 1;
-    [temp, tempY] = xyimgIdx2data(params.data_per_img, params.WindowSize, params.StrideSize,...
-        params.trainXYimg(params.imgIdx(currentPartIdx),:),...
-        params.imgDataIdx(currentPartIdx,:));
-    g_cacheX = [g_cacheX; temp];
-    g_cacheX = gpuArray(g_cacheX);
-    g_cacheY = [g_cacheY; tempY];
-    g_cacheY = gpuArray(g_cacheY);
-    clear temp;
+    currentIdx = 0;
+    currentPartIdx = 0;
+    g_cacheX = [];
+    g_cacheY = [];
     for l = 1 : numbatches
 %         tic;
        %% Extract Raw Batch X,Y.
         [currentPartIdx, g_cacheX, g_cacheY, batchX, batchY, currentIdx] = getNextBatchX(g_cacheX, g_cacheY, currentPartIdx, params, opts, currentIdx);
+        
        %% Preprocess the Raw Batch X.
         batchX = gpuArray(single(batchX));
         batchY = gpuArray(single(batchY));
@@ -151,12 +142,12 @@ end
 
 
 function [partIdx, cacheX, cacheY, batchX, batchY, Idx] = getNextBatchX(cacheX, cacheY, partIdx, params, opts, Idx)
-    if size(cacheX,1)<=opts.batchsize
+    if size(cacheX,1)<=Idx+opts.batchsize-1
         cacheX(1:Idx-1,:) = [];
         cacheY(1:Idx-1,:) = [];
         Idx = 1;
         for i=1:params.cacheImageNum
-            if partIdx>=numel(params.trainXfile)
+            if partIdx>=params.trainImgNum
                 break;
             end
             partIdx = partIdx+1;
@@ -169,8 +160,8 @@ function [partIdx, cacheX, cacheY, batchX, batchY, Idx] = getNextBatchX(cacheX, 
             cacheY = [cacheY; nextimgY];
         end
     end
-    batchX = cacheX(1:opts.batchsize,:);
-    batchY = cacheY(1:opts.batchsize,:);
+    batchX = cacheX(Idx:Idx+opts.batchsize-1,:);
+    batchY = cacheY(Idx:Idx+opts.batchsize-1,:);
     Idx = Idx + opts.batchsize;
 %     cacheX(1:opts.batchsize,:) = [];
 %     cacheY(1:opts.batchsize,:) = [];
