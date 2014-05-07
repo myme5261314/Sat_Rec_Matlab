@@ -20,6 +20,14 @@ g_Ureduce = gpuArray(params.Ureduce);
 g_postmu = gpuArray(params.postmu);
 g_postsigma = gpuArray(params.postsigma);
 
+if ~params.restart && exist(params.cacheEpochNN, 'file')
+    load(params.cacheEpochNN);
+    disp(['Finish Load Cache of Epoch-', num2str(epoch_cache)]);
+    epoch_start = epoch_cache+1;
+else
+    epoch_start = 1;
+end
+
 g_Theta1 = gpuArray(nn.Theta1);
 g_Theta2 = gpuArray(nn.Theta2);
 g_vTheta1 = gpuArray(nn.vTheta1);
@@ -27,7 +35,7 @@ g_vTheta2 = gpuArray(nn.vTheta2);
 
 % gpu = gpuDevice();
 
-for i=1:numepochs
+for i = epoch_start : numepochs
     tic;
     err = gpuArray.zeros(numbatches, 1);
     %% cache X from one img and transfer it to GPU.
@@ -136,11 +144,16 @@ for i=1:numepochs
     t = toc;
     str_perf = sprintf('; Full-batch train err = %f', gather(sum(err)));
     disp(['epoch ' num2str(i) '/' num2str(numepochs) '. Took ' num2str(t) ' seconds' '. Mini-batch mean squared error on training set is ' num2str(gather(mean(err))) str_perf]);
+    
+    nn.Theta1 = gather(g_Theta1);
+    nn.Theta2 = gather(g_Theta2);
+    nn.vTheta1 = gather(g_vTheta1);
+    nn.vTheta2 = gather(g_vTheta2);
+    epoch_cache = i;
+    save(params.cacheEpochNN, 'nn', 'epoch_cache', '-v7.3');
+    disp(['cache result of epoch-', num2str(i)]);
 end
-nn.Theta1 = gather(g_Theta1);
-nn.Theta2 = gather(g_Theta2);
-nn.vTheta1 = gather(g_vTheta1);
-nn.vTheta2 = gather(g_vTheta2);
+
 
 end
 
