@@ -71,7 +71,7 @@ else
     
     testXYimg = params.testXYimg;
     parfor i=1:test_img_num
-        [x, ~] = xyimgIdx2data(data_per_img, WindowSize, StrideSize, testXYimg{i,:});
+        [x, ~] = xyimgIdx2data(data_per_img, WindowSize, StrideSize, testXYimg(i,:));
         x = single(x);
         x = bsxfun(@rdivide, bsxfun(@minus, x, premu), presigma);
         x = x * Ureduce;
@@ -105,6 +105,8 @@ disp('Start TestSet precision and recall Stage');
 tic;
 blank = (params.WindowSize-params.StrideSize)/2;
 [testprecision, testrecall] = cal_precision_recall(blank, predyimgcell, params.testXYimg(:,2), thresholdlist_new);
+[p, r] = getBestPrecisionRecall(testprecision, testrecall);
+disp(['The best precision: ', num2str(p), '. And the best recall: ', num2str(r), '.']);
 toc;
 
 figure('Name', 'Test Set');
@@ -156,6 +158,8 @@ else
 end
 toc;
 
+data_per_img = params.data_per_img;
+datasize_per_img = params.datasize_per_img;
 [ predyimgcell ] = predy2img( data_per_img, datasize_per_img, predtrainy );
 clear predtrainy;
 thresholdlist_new = (0:1e-2:1)';
@@ -163,6 +167,8 @@ thresholdlist_new = (0:1e-2:1)';
 disp('Start TrainSet precision and recall Stage');
 tic;
 [trainprecision, trainrecall] = cal_precision_recall(blank, predyimgcell, params.trainXYimg(:,2), thresholdlist_new);
+[p, r] = getBestPrecisionRecall(testprecision, testrecall);
+disp(['The best precision: ', num2str(p), '. And the best recall: ', num2str(r), '.']);
 toc;
 
 figure('Name', 'Train Set');
@@ -174,4 +180,12 @@ save('precision_recall_rbm.mat', 'trainprecision', 'trainrecall', 'testprecision
 
 matlabpool close;
 
+end
+
+function [ p, r ] = getBestPrecisionRecall(precision, recall)
+    f1 = precision.*recall./(precision+recall);
+    f1(isnan(f1)) = -1;
+    [~, idx] = max(f1);
+    p = precision(idx);
+    r = recall(idx);
 end
