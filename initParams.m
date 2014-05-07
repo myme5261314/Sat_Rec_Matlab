@@ -33,6 +33,7 @@ params.mapFloder = 'Map';
 params.cacheFloder = fullfile(params.dataFloder, 'cache');
 params.cacheRBM = fullfile(params.cacheFloder, 'rbm.mat');
 params.cacheEpochRBM = fullfile(params.cacheFloder, 'epochrbm.mat');
+params.cacheEpochNN = fullfile(params.cacheFloder, 'epochnn.mat');
 params.cacheNN = fullfile(params.cacheFloder, 'nn.mat');
 params.cacheTestY = fullfile(params.cacheFloder, 'testy.mat');
 params.cacheTrainY = fullfile(params.cacheFloder, 'trainy.mat');

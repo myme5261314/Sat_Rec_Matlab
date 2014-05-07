@@ -15,7 +15,7 @@ g_postsigma = gpuArray(rbm.postsigma);
 
 if ~params.restart && exist(params.cacheEpochRBM, 'file')
     load(params.cacheEpochRBM);
-    disp(['Finish Load Cach of Epoch-', num2str(epoch_cache)]);
+    disp(['Finish Load Cache of Epoch-', num2str(epoch_cache)]);
     epoch_start = epoch_cache+1;
 else
     epoch_start = 1;
