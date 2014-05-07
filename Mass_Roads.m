@@ -55,6 +55,7 @@ tic;
 if ~params.restart && exist(params.cacheTestY, 'file')
     load(params.cacheTestY);
 else
+    params.testXYimg = loadXYFile(params.testXfile, params.testYfile);
     test_img_num = size(params.testXYimg,1);
     predtesty = cell(test_img_num,1);
 
@@ -118,6 +119,7 @@ tic;
 if ~params.restart && exist(params.cacheTrainY, 'file')
     load(params.cacheTrainY);
 else
+    params.trainXYimg = loadXYFile(params.trainXfile, params.trainYfile);
     train_img_num = size(params.trainXYimg,1);
 %     predtrainy = zeros(train_img_num*params.data_per_img, 256);
     predtrainy = cell(train_img_num,1);

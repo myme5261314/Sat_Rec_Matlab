@@ -36,7 +36,7 @@ params.cacheEpochRBM = fullfile(params.cacheFloder, 'epochrbm.mat');
 params.cacheNN = fullfile(params.cacheFloder, 'nn.mat');
 params.cacheTestY = fullfile(params.cacheFloder, 'testy.mat');
 params.cacheTrainY = fullfile(params.cacheFloder, 'trainy.mat');
-params.cacheRotate = fullfile(params.cacheFloder, 'rotate.mat');
+params.cachepreRotate = fullfile(params.cacheFloder, 'rotate.mat');
 
 params.cacheImageNum = 5;
 
@@ -71,23 +71,23 @@ params.validXYimg = loadXYFile(params.validXfile, params.validYfile);
 params.testXYimg = loadXYFile(params.testXfile, params.testYfile);
 
 %% Load Cached Rotate Angle
-if ~params.restart && exist(params.cachepreRoate, 'file')
-    load(params.cacheRotate);
-    params.trainRoate = trainRotate;
+if ~params.restart && exist(params.cachepreRotate, 'file')
+    load(params.cachepreRotate);
+    params.trainRotate = trainRotate;
     params.validRotate = validRotate;
     params.testRotate = testRotate;
 else
-    trainRotate = 360*rand(trainImgNum,1);
+    trainRotate = 360*rand(params.trainImgNum,1);
     validRotate = 360*rand( size(params.validXfile, 2), 1 );
     testRotate = 360*rand( size(params.testXfile, 2), 1 );
-    save(params.cacheRotate, 'trainRotate', 'validRotate', 'testRotate');
+    save(params.cachepreRotate, 'trainRotate', 'validRotate', 'testRotate');
     params.trainRotate = trainRotate;
     params.validRotate = validRotate;
     params.testRotate = testRotate;
 end
 
 %% Rotate The Image.
-for i=1:trainImgNum
+for i=1:params.trainImgNum
     params.trainXYimg{i,1} = imrotate(params.trainXYimg{i,1}, params.trainRotate(i));
     params.trainXYimg{i,2} = imrotate(params.trainXYimg{i,2}, params.trainRotate(i));
 end
