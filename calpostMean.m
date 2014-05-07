@@ -4,7 +4,7 @@ function [ postmu ] = calpostMean( imgcell, windowsize, stridesize, premu, presi
 m = size(imgcell,1);
 % postmu = gpuArray(zeros(m,size(Ureduce,2)));
 postmu = zeros(m,size(Ureduce,2));
-for i=1:m
+parfor i=1:m
     xdata = ximg2data(imgcell{i,1}, windowsize, stridesize);
 %     xdata = gpuArray(double(xdata));
     % Normalization and PCA reduce.
