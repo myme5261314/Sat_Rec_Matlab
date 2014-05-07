@@ -37,7 +37,7 @@ g_vTheta2 = gpuArray(nn.vTheta2);
 
 for i = epoch_start : numepochs
     tic;
-    err = gpuArray.zeros(numbatches, 1);
+    err = gpuArray.zeros(2*numbatches, 1);
     %% cache X from one img and transfer it to GPU.
     currentIdx = 0;
     currentPartIdx = 0;
@@ -91,7 +91,7 @@ for i = epoch_start : numepochs
         %% Update the Theta.
         
         
-        err(i,1) = sum(sum(delta3.^2));
+        err(l,1) = sum(sum(delta3.^2));
         g_Theta1_grad = delta2*batchX;
         g_Theta2_grad = delta3*A2';
         g_vTheta1 = g_momentum*g_vTheta1 + g_alpha*(g_Theta1_grad/g_batchsize + g_L2*[gpuArray.zeros(size(g_Theta1,1),1,'single') g_Theta1(:,2:end)]);
@@ -142,6 +142,7 @@ for i = epoch_start : numepochs
         
     end
     t = toc;
+    err(err==0) = [];
     str_perf = sprintf('; Full-batch train err = %f', gather(sum(err)));
     disp(['epoch ' num2str(i) '/' num2str(numepochs) '. Took ' num2str(t) ' seconds' '. Mini-batch mean squared error on training set is ' num2str(gather(mean(err))) str_perf]);
     
@@ -169,9 +170,9 @@ function [partIdx, cacheX, cacheY, batchX, batchY, Idx] = getNextBatchX(cacheX, 
             end
             partIdx = partIdx+1;
             xyimg = params.trainXYimg(params.imgIdx(partIdx),:);
-%             rand_angle = 0 * 360;
-%             xyimg{1} = imrotate(xyimg{1}, rand_angle);
-%             xyimg{2} = imrotate(xyimg{2}, rand_angle);
+            rand_angle = rand * 360;
+            xyimg{1} = imrotate(xyimg{1}, rand_angle);
+            xyimg{2} = imrotate(xyimg{2}, rand_angle);
             [nextimgX, nextimgY] = xyimgIdx2data(params.data_per_img, params.WindowSize, params.StrideSize,...
                     xyimg);
             uselessDataIdx = findUselessData(nextimgX, params.WindowSize, params.StrideSize);

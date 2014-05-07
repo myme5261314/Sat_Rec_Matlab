@@ -215,9 +215,9 @@ function [partIdx, cacheX, batchx, Idx] = getNextBatchX(cacheX, partIdx, params,
             end
             partIdx = partIdx+1;
             xyimg = params.trainXYimg(params.imgIdx(partIdx),:);
-%             rand_angle = 0 * 360;
-%             xyimg{1} = imrotate(xyimg{1}, rand_angle);
-%             xyimg{2} = imrotate(xyimg{2}, rand_angle, 'crop');
+            rand_angle = rand * 360;
+            xyimg{1} = imrotate(xyimg{1}, rand_angle);
+            xyimg{2} = imrotate(xyimg{2}, rand_angle);
             [nextimgX, ~] = xyimgIdx2data(params.data_per_img, params.WindowSize, params.StrideSize,...
                     xyimg);
             uselessDataIdx = findUselessData(nextimgX, params.WindowSize, params.StrideSize);
