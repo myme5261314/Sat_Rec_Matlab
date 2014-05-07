@@ -70,6 +70,7 @@ else
     postsigma = params.postsigma;
     Ureduce = params.Ureduce;
     
+    params.testXYimg = loadXYFile(params.testXfile, params.testYfile);
     testXYimg = params.testXYimg;
     parfor i=1:test_img_num
         [x, ~] = xyimgIdx2data(data_per_img, WindowSize, StrideSize, testXYimg(i,:));
@@ -135,6 +136,7 @@ else
     postsigma = params.postsigma;
     Ureduce = params.Ureduce;
     
+    params.trainXYimg = loadXYFile(params.trainXfile, params.trainYfile);
     trainXYimg = params.trainXYimg;
     parfor i=1:train_img_num
         [x, ~] = xyimgIdx2data(data_per_img, WindowSize, StrideSize, trainXYimg(i,:));
