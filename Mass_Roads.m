@@ -17,21 +17,21 @@ opts.momentum  =   0.9;
 opts.alpha     =   0.001;
 opts.L2 = 0.0002;
 
-disp('Start RBM Stage');
-tic;
-if ~params.restart && exist(params.cacheRBM, 'file')
-    if ~exist(params.cacheNN, 'file')
-        load(params.cacheRBM);
-    end
-else
-    rbm = rbmsetup(params, hidden_layer_size, opts);
-    rbm = rbm_train(params, rbm, opts);
-    save(params.cacheRBM, 'rbm', '-v7.3');
-end
-toc;
-if exist('rbm', 'var')
-    figure; visualize(rbm.W);   %  Visualize the RBM weights
-end
+% disp('Start RBM Stage');
+% tic;
+% if ~params.restart && exist(params.cacheRBM, 'file')
+%     if ~exist(params.cacheNN, 'file')
+%         load(params.cacheRBM);
+%     end
+% else
+%     rbm = rbmsetup(params, hidden_layer_size, opts);
+%     rbm = rbm_train(params, rbm, opts);
+%     save(params.cacheRBM, 'rbm', '-v7.3');
+% end
+% toc;
+% if exist('rbm', 'var')
+%     figure; visualize(rbm.W);   %  Visualize the RBM weights
+% end
 
 
 
@@ -42,9 +42,11 @@ tic;
 if ~params.restart && exist(params.cacheNN, 'file')
     load(params.cacheNN);
 else
-    w = [rbm.c; rbm.W];
-    clear rbm;
+%     w = [rbm.c; rbm.W];
+%     clear rbm;
+    w = single(randInitializeWeights(4096, 4096*3))';
     nn = nn_setup(params, w, opts);
+    clear w;
     nn = nn_train(params, nn, opts);
     save(params.cacheNN, 'nn', '-v7.3');
 end
