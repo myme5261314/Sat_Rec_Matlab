@@ -88,7 +88,7 @@ for i=1:numepochs
         %% Update the Theta.
         
         
-        err(i,1) = sum(sum(delta3.^2));
+        err(l,1) = sum(sum(delta3.^2));
         g_Theta1_grad = delta2*batchX;
         g_Theta2_grad = delta3*A2';
         g_vTheta1 = g_momentum*g_vTheta1 + g_alpha*(g_Theta1_grad/g_batchsize + g_L2*[gpuArray.zeros(size(g_Theta1,1),1,'single') g_Theta1(:,2:end)]);
