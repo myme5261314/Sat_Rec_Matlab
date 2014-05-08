@@ -20,6 +20,14 @@ g_Ureduce = gpuArray(params.Ureduce);
 g_postmu = gpuArray(params.postmu);
 g_postsigma = gpuArray(params.postsigma);
 
+if ~params.restart && exist(params.cacheEpochNN, 'file')
+    load(params.cacheEpochNN);
+    disp(['Finish Load Cache of Epoch-', num2str(epoch_cache)]);
+    epoch_start = epoch_cache+1;
+else
+    epoch_start = 1;
+end
+
 g_Theta1 = gpuArray(nn.Theta1);
 g_Theta2 = gpuArray(nn.Theta2);
 g_vTheta1 = gpuArray(nn.vTheta1);
@@ -27,7 +35,7 @@ g_vTheta2 = gpuArray(nn.vTheta2);
 
 % gpu = gpuDevice();
 
-for i=1:numepochs
+for i = epoch_start : numepochs
     tic;
     err = gpuArray.zeros(numbatches, 1);
     %% cache X from one img and transfer it to GPU.
@@ -83,7 +91,7 @@ for i=1:numepochs
         %% Update the Theta.
         
         
-        err(i,1) = sum(sum(delta3.^2));
+        err(l,1) = sum(sum(delta3.^2));
         g_Theta1_grad = delta2*batchX;
         g_Theta2_grad = delta3*A2';
         g_vTheta1 = g_momentum*g_vTheta1 + g_alpha*(g_Theta1_grad/g_batchsize + g_L2*[gpuArray.zeros(size(g_Theta1,1),1,'single') g_Theta1(:,2:end)]);
@@ -136,29 +144,34 @@ for i=1:numepochs
     t = toc;
     str_perf = sprintf('; Full-batch train err = %f', gather(sum(err)));
     disp(['epoch ' num2str(i) '/' num2str(numepochs) '. Took ' num2str(t) ' seconds' '. Mini-batch mean squared error on training set is ' num2str(gather(mean(err))) str_perf]);
+    
+    nn.Theta1 = gather(g_Theta1);
+    nn.Theta2 = gather(g_Theta2);
+    nn.vTheta1 = gather(g_vTheta1);
+    nn.vTheta2 = gather(g_vTheta2);
+    epoch_cache = i;
+    save(params.cacheEpochNN, 'nn', 'epoch_cache', '-v7.3');
+    disp(['cache result of epoch-', num2str(i)]);
 end
-nn.Theta1 = gather(g_Theta1);
-nn.Theta2 = gather(g_Theta2);
-nn.vTheta1 = gather(g_vTheta1);
-nn.vTheta2 = gather(g_vTheta2);
+
 
 end
 
 
 function [partIdx, cacheX, cacheY, batchX, batchY, Idx] = getNextBatchX(cacheX, cacheY, partIdx, params, opts, Idx)
-    if size(cacheX,1)<=opts.batchsize
+    if size(cacheX,1)<=Idx+opts.batchsize-1
         cacheX(1:Idx-1,:) = [];
         cacheY(1:Idx-1,:) = [];
         Idx = 1;
         for i=1:params.cacheImageNum
-            if partIdx>=params.cacheImageNum
+            if partIdx>=params.trainImgNum
                 break;
             end
             partIdx = partIdx+1;
             xyimg = params.trainXYimg(params.imgIdx(partIdx),:);
-            rand_angle = 0 * 360;
-            xyimg{1} = imrotate(xyimg{1}, rand_angle);
-            xyimg{2} = imrotate(xyimg{2}, rand_angle);
+%             rand_angle = 0 * 360;
+%             xyimg{1} = imrotate(xyimg{1}, rand_angle);
+%             xyimg{2} = imrotate(xyimg{2}, rand_angle);
             [nextimgX, nextimgY] = xyimgIdx2data(params.data_per_img, params.WindowSize, params.StrideSize,...
                     xyimg);
             uselessDataIdx = findUselessData(nextimgX, params.WindowSize, params.StrideSize);
@@ -170,8 +183,8 @@ function [partIdx, cacheX, cacheY, batchX, batchY, Idx] = getNextBatchX(cacheX, 
             cacheY = [cacheY; nextimgY];
         end
     end
-    batchX = cacheX(1:opts.batchsize,:);
-    batchY = cacheY(1:opts.batchsize,:);
+    batchX = cacheX(Idx:Idx+opts.batchsize-1,:);
+    batchY = cacheY(Idx:Idx+opts.batchsize-1,:);
     Idx = Idx + opts.batchsize;
 %     cacheX(1:opts.batchsize,:) = [];
 %     cacheY(1:opts.batchsize,:) = [];
@@ -181,16 +194,17 @@ function [idx] = findUselessData(data, WindowSize, StrideSize)
     blank = (WindowSize - StrideSize)/2;
     assert(rem(blank,1)==0, 'The blank should be integer, which actual is %f'...
     , blank);
-    rowIdx = blank+1:blank+StrideSize;
-    colIdx = blank+1:blank+StrideSize;
-    newrowIdx = repmat(rowIdx, [1 StrideSize]);
-    newColIdx = zeros(1, StrideSize^2);
-    newColIdx(1,:) = colIdx(1,ceil((1:StrideSize^2)/StrideSize));
-    subIdx = zeros(1, 3*StrideSize^2);
-    matSize = [WindowSize WindowSize 3];
-    channelIdx = ones(1, StrideSize^2);
-    subIdx(1,1:StrideSize^2) = sub2ind(matSize, newrowIdx, newColIdx, 1*channelIdx);
-    subIdx(1, StrideSize^2+1:2*StrideSize^2) = sub2ind(matSize, newrowIdx, newColIdx, 2*channelIdx);
-    subIdx(1, 2*StrideSize^2+1:3*StrideSize^2) = sub2ind(matSize, newrowIdx, newColIdx, 3*channelIdx);
-    idx = ~any(data(:,subIdx),2);
+%     rowIdx = blank+1:blank+StrideSize;
+%     colIdx = blank+1:blank+StrideSize;
+%     newrowIdx = repmat(rowIdx, [1 StrideSize]);
+%     newColIdx = zeros(1, StrideSize^2);
+%     newColIdx(1,:) = colIdx(1,ceil((1:StrideSize^2)/StrideSize));
+%     subIdx = zeros(1, 3*StrideSize^2);
+%     matSize = [WindowSize WindowSize 3];
+%     channelIdx = ones(1, StrideSize^2);
+%     subIdx(1,1:StrideSize^2) = sub2ind(matSize, newrowIdx, newColIdx, 1*channelIdx);
+%     subIdx(1, StrideSize^2+1:2*StrideSize^2) = sub2ind(matSize, newrowIdx, newColIdx, 2*channelIdx);
+%     subIdx(1, 2*StrideSize^2+1:3*StrideSize^2) = sub2ind(matSize, newrowIdx, newColIdx, 3*channelIdx);
+%     idx = ~any(data(:,subIdx),2);
+    idx = ~all(data ,2);
 end
