@@ -1,4 +1,4 @@
-function [ ydata ] = yimg2data( img, windowsize, stridesize, dataIdx )
+function [ ydata ] = yimg2data( img, windowsize, stridesize )
 %YIMG2DATA Summary of this function goes here
 %   This is the function to generate the corresponding X data entities from
 %   an image of Map.

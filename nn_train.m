@@ -160,11 +160,12 @@ function [partIdx, cacheX, cacheY, batchX, batchY, Idx] = getNextBatchX(cacheX, 
                 break;
             end
             partIdx = partIdx+1;
-            [nextimgX, nextimgY] = xyimgIdx2data(params.data_per_img, params.WindowSize, params.StrideSize,...
-                    params.trainXYimg(params.imgIdx(partIdx),:),...
-                    params.imgDataIdx(partIdx,:));
+            [nextimgX, nextimgY] = xyimgIdx2data(params.WindowSize, params.StrideSize,...
+                    params.trainXYimg(params.imgIdx(partIdx),:));
+            nextimgX = nextimgX( randperm(size(nextimgX,1)), : );
             nextimgX = gpuArray(nextimgX);
             cacheX = [cacheX; nextimgX];
+            nextimgY = nextimgY( randperm(size(nextimgY,1)), : );
             nextimgY = gpuArray(nextimgY);
             cacheY = [cacheY; nextimgY];
         end

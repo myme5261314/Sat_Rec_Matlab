@@ -1,4 +1,4 @@
-function [ xdata ] = ximg2data( img, windowsize, stridesize, dataIdx )
+function [ xdata ] = ximg2data( img, windowsize, stridesize )
 %XIMG2DATA Summary of this function goes here
 %   This is the function to generate the corresponding X data entities from
 %   an image of Arieal.
