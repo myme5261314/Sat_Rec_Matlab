@@ -168,7 +168,6 @@ function [partIdx, cacheX, cacheY, batchX, batchY, Idx] = getNextBatchX(cacheX, 
                 break;
             end
             partIdx = partIdx+1;
-<<<<<<< HEAD
             xyimg = params.trainXYimg(params.imgIdx(partIdx),:);
 %             rand_angle = 0 * 360;
 %             xyimg{1} = imrotate(xyimg{1}, rand_angle);
