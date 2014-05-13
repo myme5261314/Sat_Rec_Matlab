@@ -214,14 +214,16 @@ function [partIdx, cacheX, batchx, Idx] = getNextBatchX(cacheX, partIdx, params,
                 break;
             end
             partIdx = partIdx+1;
+<<<<<<< HEAD
             xyimg = params.trainXYimg(params.imgIdx(partIdx),:);
             rand_angle = rand * 360;
             xyimg{1} = imrotate(xyimg{1}, rand_angle);
             xyimg{2} = imrotate(xyimg{2}, rand_angle);
-            [nextimgX, ~] = xyimgIdx2data(params.data_per_img, params.WindowSize, params.StrideSize,...
+            [nextimgX, ~] = xyimgIdx2data(params.WindowSize, params.StrideSize,...
                     xyimg);
             uselessDataIdx = findUselessData(nextimgX, params.WindowSize, params.StrideSize);
             nextimgX(uselessDataIdx,:) = [];
+            nextimgX = nextimgX( randperm(size(nextimgX,1)), : );
             nextimgX = gpuArray(nextimgX);
             cacheX = [cacheX; nextimgX];
             clear nextimgX;
