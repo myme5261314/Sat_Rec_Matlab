@@ -182,7 +182,7 @@ function [partIdx, cacheX, cacheY, batchX, batchY, Idx] = getNextBatchX(cacheX, 
             nextimgX = gpuArray(nextimgX);
             cacheX = [cacheX; nextimgX];
             nextimgY(uselessDataIdx,:) = [];
-            nextimgY = nextimgY( rIdx, : )
+            nextimgY = nextimgY( rIdx, : );
             nextimgY = gpuArray(nextimgY);
             cacheY = [cacheY; nextimgY];
         end
