@@ -177,8 +177,8 @@ function [partIdx, cacheX, cacheY, batchX, batchY, Idx] = getNextBatchX(cacheX, 
                     xyimg);
             uselessDataIdx = findUselessData(nextimgX, params.WindowSize, params.StrideSize);
             nextimgX(uselessDataIdx,:) = [];
-            rIdx = randperm(size(nextimgY,1));
-            nextimgY = nextimgY( rIdx, : );
+            rIdx = randperm(size(nextimgX,1));
+            nextimgX = nextimgX( rIdx, : );
             nextimgX = gpuArray(nextimgX);
             cacheX = [cacheX; nextimgX];
             nextimgY(uselessDataIdx,:) = [];
