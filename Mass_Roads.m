@@ -100,6 +100,7 @@ data_per_img = params.data_per_img;
 datasize_per_img = params.datasize_per_img;
 
 [ predyimgcell ] = predy2img( data_per_img, datasize_per_img, predtesty );
+predtestyimgcell = predyimgcell;
 clear predtesty;
 thresholdlist_new = (0:1e-2:1)';
 
@@ -199,6 +200,63 @@ else
         postnnsigma = calpostNNSigma(params, predtrainyimgcell, postnnmu);
     end
 end
+
+%% Post-Process Evaluation.
+%% Calculate Precision and Recall on TestSet.
+disp('Start PredY on TestSet With Post-Process');
+tic;
+if ~params.restart && exist(params.cachePostTestY, 'file')
+    load(params.cachePostTestY);
+else
+    params.testXYimg = loadXYFile(params.testXfile, params.testYfile);
+    test_img_num = size(params.testXYimg,1);
+    predposttesty = cell(test_img_num,1);
+
+    Theta1 = postnn.Theta1;
+    Theta2 = postnn.Theta2;
+
+    WindowSize = params.WindowSize;
+    StrideSize = params.StrideSize;
+
+    
+    testXYimg = params.testXYimg;
+    parfor i=1:test_img_num
+        [x, ~] = predyimg2data(predtestyimgcell{i,1}, testXYimg{i,2},...
+            WindowSize, StrideSize, false);
+        x = single(x);
+        x = bsxfun(@rdivide, bsxfun(@minus, x, postnnmu), postnnsigma);
+        x = [ ones(size(x,1),1) x ];
+        Z2 = Theta1 * x';
+
+        A2 = sigm( Z2 );
+        A2 = [ ones(1,size(A2,2)) ; A2 ];
+
+        predposttesty{i} = sigm( Theta2 * A2 )';
+    end
+    clear Theta1 Theta2 WindowSize StrideSize testXYimg;
+    predposttesty = cell2mat(predposttesty);
+    save(params.cachePostTestY, 'predposttesty', '-v7.3');
+    
+end
+toc;
+
+data_per_img = params.data_per_img;
+datasize_per_img = params.datasize_per_img;
+
+[ predyimgcell ] = predy2img( data_per_img, datasize_per_img, predtesty );
+clear predtesty;
+thresholdlist_new = (0:1e-2:1)';
+
+disp('Start TestSet precision and recall Stage');
+tic;
+blank = (params.WindowSize-params.StrideSize)/2;
+[testprecision, testrecall] = cal_precision_recall(blank, predyimgcell, params.testXYimg(:,2), thresholdlist_new);
+[p, r] = getBestPrecisionRecall(testprecision, testrecall);
+disp(['The best precision: ', num2str(p), '. And the best recall: ', num2str(r), '.']);
+toc;
+
+figure('Name', 'Test Set');
+plot(testrecall, testprecision);
 
 matlabpool close;
 

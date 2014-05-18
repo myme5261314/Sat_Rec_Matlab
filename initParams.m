@@ -44,6 +44,8 @@ params.cachePostNN = fullfile(params.cacheFloder, 'postnn.mat');
 params.cachePostNNMu = fullfile(params.cacheFloder, 'postnnmu.mat');
 params.cachePostNNSigma = fullfile(params.cacheFloder, 'postnnsigma.mat');
 
+params.cachePostTestY = fullfile(params.cacheFloder, 'posttesty.mat');
+
 params.cacheImageNum = 5;
 
 %% Get Data File path.
