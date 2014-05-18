@@ -206,6 +206,7 @@ else
         load(params.cachePostNNSigma);
     else
         postnnsigma = calpostNNSigma(params, predtrainyimgcell, postnnmu);
+        save(params.cachePostNNSigma, 'postnnsigma');
     end
 end
 
@@ -225,7 +226,7 @@ else
 
     WindowSize = params.WindowSize;
     StrideSize = params.StrideSize;
-    if ~exist(predtestyimgcell, 'var')
+    if ~exist('predtestyimgcell', 'var')
         data_per_img = params.data_per_img;
         datasize_per_img = params.datasize_per_img;
         [ predtestyimgcell ] = predy2img( data_per_img, datasize_per_img, predtesty );
