@@ -44,7 +44,8 @@ if ~params.restart && exist(params.cacheNN, 'file')
 else
     w = [rbm.c; rbm.W];
     clear rbm;
-    nn = nn_setup(params, w, opts);
+    nn = nn_setup(params.reduce, params.rawD, params.StrideSize^2, opts);
+    nn.Theta1 = w';
     nn = nn_train(params, nn, opts);
     save(params.cacheNN, 'nn', '-v7.3');
 end
@@ -163,6 +164,7 @@ toc;
 data_per_img = params.data_per_img;
 datasize_per_img = params.datasize_per_img;
 [ predyimgcell ] = predy2img( data_per_img, datasize_per_img, predtrainy );
+predtrainyimgcell = predyimgcell;
 clear predtrainy;
 thresholdlist_new = (0:1e-2:1)';
 
@@ -179,6 +181,24 @@ plot(trainrecall, trainprecision);
 
 
 save('precision_recall_rbm.mat', 'trainprecision', 'trainrecall', 'testprecision', 'testrecall');
+
+%% Post-Process
+if ~params.restart && exist(params.cachePostNN, 'file')
+    load(params.cachePostNN);
+else
+    postnn = nn_setup(params.reduce, params.reduce, params.StrideSize^2, opts);
+    if ~params.restart && exist(params.cachePostNNMu, 'file')
+        load(params.cachePostNNMu);
+    else
+        postnnmu = calpostNNMu(params, predtrainyimgcell);
+        save(params.cachePostNNMu, 'postnnmu');
+    end
+    if ~params.restart && exist(params.cachePostNNSigma, 'file')
+        load(params.cachePostNNSigma);
+    else
+        postnnsigma = calpostNNSigma(params, predtrainyimgcell, postnnmu);
+    end
+end
 
 matlabpool close;
 
