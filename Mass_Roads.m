@@ -167,14 +167,17 @@ toc;
 
 disp('Start TrainSet precision and recall Stage');
 tic;
-data_per_img = params.data_per_img;
-datasize_per_img = params.datasize_per_img;
-[ predyimgcell ] = predy2img( data_per_img, datasize_per_img, predtrainy );
-predtrainyimgcell = predyimgcell;
+
 % clear predtrainy;
 if ~params.restart && exist(params.cacheTrainYmetric, 'file')
     load(params.cacheTrainYmetric);
 else
+    if ~exist('predtrainyimgcell', 'var')
+        data_per_img = params.data_per_img;
+        datasize_per_img = params.datasize_per_img;
+        [ predyimgcell ] = predy2img( data_per_img, datasize_per_img, predtrainy );
+        predtrainyimgcell = predyimgcell;
+    end
     thresholdlist_new = (0:1e-2:1)';
     [trainprecision, trainrecall] = cal_precision_recall(blank, predyimgcell, params.trainXYimg(:,2), thresholdlist_new);
     save(params.cacheTrainYmetric, 'trainprecision', 'trainrecall');
@@ -195,19 +198,36 @@ save('precision_recall_rbm.mat', 'trainprecision', 'trainrecall', 'testprecision
 if ~params.restart && exist(params.cachePostNN, 'file')
     load(params.cachePostNN);
 else
+    if ~exist('predtrainyimgcell', 'var')
+        data_per_img = params.data_per_img;
+        datasize_per_img = params.datasize_per_img;
+        [ predyimgcell ] = predy2img( data_per_img, datasize_per_img, predtrainy );
+        predtrainyimgcell = predyimgcell;
+    end
     postnn = nn_setup(params.reduce, params.reduce, params.StrideSize^2, opts);
+    tic;
     if ~params.restart && exist(params.cachePostNNMu, 'file')
         load(params.cachePostNNMu);
     else
         postnnmu = calpostNNMu(params, predtrainyimgcell);
         save(params.cachePostNNMu, 'postnnmu');
     end
+    disp('Finish Post-Process Mean Stage');
+    toc;
+    tic;
     if ~params.restart && exist(params.cachePostNNSigma, 'file')
         load(params.cachePostNNSigma);
     else
         postnnsigma = calpostNNSigma(params, predtrainyimgcell, postnnmu);
         save(params.cachePostNNSigma, 'postnnsigma');
     end
+    disp('Finish Post-Process Std Stage');
+    toc;
+    tic;
+    postnn = post_nn_train(params, predtrainyimgcell, postnn, opts, postnnmu, postnnsigma);
+    save(params.cachePostNN, 'postnn', '-v7.3');
+    disp('Finish Post-Process NN Train Stage');
+    toc;
 end
 
 %% Post-Process Evaluation.
