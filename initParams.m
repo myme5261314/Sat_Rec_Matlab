@@ -38,6 +38,11 @@ params.cacheNN = fullfile(params.cacheFloder, 'nn.mat');
 params.cacheTestY = fullfile(params.cacheFloder, 'testy.mat');
 params.cacheTrainY = fullfile(params.cacheFloder, 'trainy.mat');
 params.cachepreRotate = fullfile(params.cacheFloder, 'rotate.mat');
+params.cacheEpochPostNN = fullfile(params.cacheFloder, 'epochpostnn.mat');
+params.cachePostNN = fullfile(params.cacheFloder, 'postnn.mat');
+
+params.cachePostNNMu = fullfile(params.cacheFloder, 'postnnmu.mat');
+params.cachePostNNSigma = fullfile(params.cacheFloder, 'postnnsigma.mat');
 
 params.cacheImageNum = 5;
 
