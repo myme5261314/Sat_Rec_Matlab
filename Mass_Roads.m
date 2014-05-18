@@ -96,18 +96,21 @@ else
 end
 toc;
 
-data_per_img = params.data_per_img;
-datasize_per_img = params.datasize_per_img;
-
-[ predyimgcell ] = predy2img( data_per_img, datasize_per_img, predtesty );
-predtestyimgcell = predyimgcell;
-clear predtesty;
-thresholdlist_new = (0:1e-2:1)';
-
 disp('Start TestSet precision and recall Stage');
 tic;
-blank = (params.WindowSize-params.StrideSize)/2;
-[testprecision, testrecall] = cal_precision_recall(blank, predyimgcell, params.testXYimg(:,2), thresholdlist_new);
+if ~params.restart && exist(params.cacheTestYmetric, 'file')
+    load(params.cacheTestYmetric);
+else
+    data_per_img = params.data_per_img;
+    datasize_per_img = params.datasize_per_img;
+    [ predyimgcell ] = predy2img( data_per_img, datasize_per_img, predtesty );
+    predtestyimgcell = predyimgcell;
+    clear predtesty;
+    thresholdlist_new = (0:1e-2:1)';
+    blank = (params.WindowSize-params.StrideSize)/2;
+    [testprecision, testrecall] = cal_precision_recall(blank, predyimgcell, params.testXYimg(:,2), thresholdlist_new);
+    save(params.cacheTestYmetric, 'testprecision', 'testrecall');
+end
 [p, r] = getBestPrecisionRecall(testprecision, testrecall);
 disp(['The best precision: ', num2str(p), '. And the best recall: ', num2str(r), '.']);
 toc;
@@ -162,16 +165,21 @@ else
 end
 toc;
 
-data_per_img = params.data_per_img;
-datasize_per_img = params.datasize_per_img;
-[ predyimgcell ] = predy2img( data_per_img, datasize_per_img, predtrainy );
-predtrainyimgcell = predyimgcell;
-clear predtrainy;
-thresholdlist_new = (0:1e-2:1)';
-
 disp('Start TrainSet precision and recall Stage');
 tic;
-[trainprecision, trainrecall] = cal_precision_recall(blank, predyimgcell, params.trainXYimg(:,2), thresholdlist_new);
+if ~params.restart && exist(params.cacheTrainYmetric, 'file')
+    load(params.cacheTrainYmetric);
+else
+    data_per_img = params.data_per_img;
+    datasize_per_img = params.datasize_per_img;
+    [ predyimgcell ] = predy2img( data_per_img, datasize_per_img, predtrainy );
+    predtrainyimgcell = predyimgcell;
+    clear predtrainy;
+    thresholdlist_new = (0:1e-2:1)';
+    [trainprecision, trainrecall] = cal_precision_recall(blank, predyimgcell, params.trainXYimg(:,2), thresholdlist_new);
+    save(params.cacheTrainYmetric, 'trainprecision', 'trainrecall');
+end
+
 [p, r] = getBestPrecisionRecall(trainprecision, trainprecision);
 disp(['The best precision: ', num2str(p), '. And the best recall: ', num2str(r), '.']);
 toc;
@@ -240,23 +248,27 @@ else
 end
 toc;
 
-data_per_img = params.data_per_img;
-datasize_per_img = params.datasize_per_img;
-
-[ predyimgcell ] = predy2img( data_per_img, datasize_per_img, predtesty );
-clear predtesty;
-thresholdlist_new = (0:1e-2:1)';
-
 disp('Start TestSet precision and recall Stage');
 tic;
-blank = (params.WindowSize-params.StrideSize)/2;
-[testprecision, testrecall] = cal_precision_recall(blank, predyimgcell, params.testXYimg(:,2), thresholdlist_new);
-[p, r] = getBestPrecisionRecall(testprecision, testrecall);
+if ~params.restart && exist(params.cachePostTestYmetric, 'file')
+    load(params.cachePostTestYmetric);
+else
+    data_per_img = params.data_per_img;
+    datasize_per_img = params.datasize_per_img;
+
+    [ predyimgcell ] = predy2img( data_per_img, datasize_per_img, predposttesty );
+    clear predtesty;
+    thresholdlist_new = (0:1e-2:1)';
+    blank = (params.WindowSize-params.StrideSize)/2;
+    [posttestprecision, posttestrecall] = cal_precision_recall(blank, predyimgcell, params.testXYimg(:,2), thresholdlist_new);
+    save(params.cachePostTestYmetric, 'posttestprecision', 'posttestrecall');
+end
+[p, r] = getBestPrecisionRecall(posttestprecision, posttestrecall);
 disp(['The best precision: ', num2str(p), '. And the best recall: ', num2str(r), '.']);
 toc;
 
 figure('Name', 'Test Set');
-plot(testrecall, testprecision);
+plot(posttestrecall, posttestprecision);
 
 matlabpool close;
 

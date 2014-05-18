@@ -36,7 +36,9 @@ params.cacheEpochRBM = fullfile(params.cacheFloder, 'epochrbm.mat');
 params.cacheEpochNN = fullfile(params.cacheFloder, 'epochnn.mat');
 params.cacheNN = fullfile(params.cacheFloder, 'nn.mat');
 params.cacheTestY = fullfile(params.cacheFloder, 'testy.mat');
+params.cacheTestYmetric = fullfile(params.cacheFloder, 'testymetric.mat');
 params.cacheTrainY = fullfile(params.cacheFloder, 'trainy.mat');
+params.cacheTrainYmetric = fullfile(params.cacheFloder, 'trainymetric.mat');
 params.cachepreRotate = fullfile(params.cacheFloder, 'rotate.mat');
 params.cacheEpochPostNN = fullfile(params.cacheFloder, 'epochpostnn.mat');
 params.cachePostNN = fullfile(params.cacheFloder, 'postnn.mat');
@@ -45,6 +47,7 @@ params.cachePostNNMu = fullfile(params.cacheFloder, 'postnnmu.mat');
 params.cachePostNNSigma = fullfile(params.cacheFloder, 'postnnsigma.mat');
 
 params.cachePostTestY = fullfile(params.cacheFloder, 'posttesty.mat');
+params.cachePostTestYmetric = fullfile(params.cacheFloder, 'posttestymetric.mat');
 
 params.cacheImageNum = 5;
 
