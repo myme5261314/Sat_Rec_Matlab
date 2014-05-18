@@ -9,8 +9,9 @@ fullpredimg = zeros(size(yimg), 'single');
 blank = (WindowSize-StrideSize)/2;
 fullpredimg( ( 1:size(predyimg,1) )+blank, ( 1:size(predyimg,2) )+blank )...
     = predyimg;
-r = floor( (size(yimg,1)-blank)/StrideSize );
-c = floor( (size(yimg,2)-blank)/StrideSize );
+s = img2matsize(size(yimg), WindowSize, StrideSize);
+r = s(1);
+c = s(2);
 dataX = zeros(r*c, WindowSize^2);
 dataY = zeros(r*c, StrideSize^2);
 for i=1:r*c
