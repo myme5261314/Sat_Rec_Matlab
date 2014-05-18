@@ -1,6 +1,10 @@
-function [ dataX, dataY ] = predyimg2data( predyimg, yimg, WindowSize, StrideSize )
+function [ dataX, dataY ] = predyimg2data( predyimg, yimg, WindowSize, StrideSize, ifrotate )
 %PREDYIMG2DATA Summary of this function goes here
 %   Detailed explanation goes here
+if nargin==4
+    ifrotate = 1;
+end
+
 fullpredimg = zeros(size(yimg), 'single');
 blank = (WindowSize-StrideSize)/2;
 fullpredimg( ( 1:size(predyimg,1) )+blank, ( 1:size(predyimg,2) )+blank )...
@@ -14,11 +18,15 @@ for i=1:r*c
     ri = floor(i/c);
     ci = mod(i, c);
     temp = fullpredimg( (1:WindowSize)+ri*StrideSize, (1:WindowSize)+ci*StrideSize );
-    temp = imrotate(temp, randangle, 'crop');
+    if ifrotate
+        temp = imrotate(temp, randangle, 'crop');
+    end
     temp = temp(:);
     dataX(i,:) = temp';
     temp = yimg( (1:StrideSize)+blank+ri*StrideSize, (1:StrideSize)+blank+ci*StrideSize);
-    temp = imrotate(temp, randangle, 'crop');
+    if ifrotate
+        temp = imrotate(temp, randangle, 'crop');
+    end
     temp = temp(:);
     dataY(i,:) = temp';
     clear temp;
