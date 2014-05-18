@@ -18,6 +18,7 @@ parfor i=1:m
 end
 
 sigma = sum(sigma)/sum(total);
+sigma = sqrt(sigma);
 
 end
 
