@@ -167,14 +167,14 @@ toc;
 
 disp('Start TrainSet precision and recall Stage');
 tic;
+data_per_img = params.data_per_img;
+datasize_per_img = params.datasize_per_img;
+[ predyimgcell ] = predy2img( data_per_img, datasize_per_img, predtrainy );
+predtrainyimgcell = predyimgcell;
+clear predtrainy;
 if ~params.restart && exist(params.cacheTrainYmetric, 'file')
     load(params.cacheTrainYmetric);
 else
-    data_per_img = params.data_per_img;
-    datasize_per_img = params.datasize_per_img;
-    [ predyimgcell ] = predy2img( data_per_img, datasize_per_img, predtrainy );
-    predtrainyimgcell = predyimgcell;
-    clear predtrainy;
     thresholdlist_new = (0:1e-2:1)';
     [trainprecision, trainrecall] = cal_precision_recall(blank, predyimgcell, params.trainXYimg(:,2), thresholdlist_new);
     save(params.cacheTrainYmetric, 'trainprecision', 'trainrecall');
