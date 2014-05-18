@@ -16,7 +16,7 @@ dataX = zeros(r*c, WindowSize^2);
 dataY = zeros(r*c, StrideSize^2);
 for i=1:r*c
     randangle = 360*rand;
-    ri = floor(i/c);
+    ri = floor( (i-1)/c);
     ci = mod(i-1, c);
     temp = fullpredimg( (1:WindowSize)+ri*StrideSize, (1:WindowSize)+ci*StrideSize );
     if ifrotate
