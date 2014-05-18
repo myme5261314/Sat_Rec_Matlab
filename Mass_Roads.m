@@ -105,7 +105,7 @@ else
     datasize_per_img = params.datasize_per_img;
     [ predyimgcell ] = predy2img( data_per_img, datasize_per_img, predtesty );
     predtestyimgcell = predyimgcell;
-    clear predtesty;
+%     clear predtesty;
     thresholdlist_new = (0:1e-2:1)';
     blank = (params.WindowSize-params.StrideSize)/2;
     [testprecision, testrecall] = cal_precision_recall(blank, predyimgcell, params.testXYimg(:,2), thresholdlist_new);
@@ -171,7 +171,7 @@ data_per_img = params.data_per_img;
 datasize_per_img = params.datasize_per_img;
 [ predyimgcell ] = predy2img( data_per_img, datasize_per_img, predtrainy );
 predtrainyimgcell = predyimgcell;
-clear predtrainy;
+% clear predtrainy;
 if ~params.restart && exist(params.cacheTrainYmetric, 'file')
     load(params.cacheTrainYmetric);
 else
@@ -225,7 +225,11 @@ else
 
     WindowSize = params.WindowSize;
     StrideSize = params.StrideSize;
-
+    if ~exist(predtestyimgcell, 'var')
+        data_per_img = params.data_per_img;
+        datasize_per_img = params.datasize_per_img;
+        [ predtestyimgcell ] = predy2img( data_per_img, datasize_per_img, predtesty );
+    end
     
     testXYimg = params.testXYimg;
     parfor i=1:test_img_num
@@ -257,7 +261,6 @@ else
     datasize_per_img = params.datasize_per_img;
 
     [ predyimgcell ] = predy2img( data_per_img, datasize_per_img, predposttesty );
-    clear predtesty;
     thresholdlist_new = (0:1e-2:1)';
     blank = (params.WindowSize-params.StrideSize)/2;
     [posttestprecision, posttestrecall] = cal_precision_recall(blank, predyimgcell, params.testXYimg(:,2), thresholdlist_new);
