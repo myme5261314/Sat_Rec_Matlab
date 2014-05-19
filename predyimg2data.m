@@ -24,7 +24,7 @@ for i=1:m
     Ximgcell{i,1} = temp;
     temp = yimg( (1:StrideSize)+blank+ri*StrideSize, (1:StrideSize)+blank+ci*StrideSize);
     Yimgcell{i,1} = temp;
-    clear temp;
+%     clear temp;
 end
 if ifrotate
     randangle = 360*rand(m,1);
