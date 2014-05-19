@@ -12,25 +12,32 @@ fullpredimg( ( 1:size(predyimg,1) )+blank, ( 1:size(predyimg,2) )+blank )...
 s = img2matsize(size(yimg), WindowSize, StrideSize);
 r = s(1);
 c = s(2);
+m = r*c;
 dataX = zeros(r*c, WindowSize^2);
 dataY = zeros(r*c, StrideSize^2);
-for i=1:r*c
-    randangle = 360*rand;
-    ri = floor( (i-1)/c);
-    ci = mod(i-1, c);
+Ximgcell = cell(m,1);
+Yimgcell = cell(m,1);
+for i=1:m
+    ci = floor( (i-1)/c);
+    ri = mod(i-1, c);
     temp = fullpredimg( (1:WindowSize)+ri*StrideSize, (1:WindowSize)+ci*StrideSize );
-    if ifrotate
-        temp = imrotate(temp, randangle, 'crop');
-    end
-    temp = temp(:);
-    dataX(i,:) = temp';
+    Ximgcell{i,1} = temp;
     temp = yimg( (1:StrideSize)+blank+ri*StrideSize, (1:StrideSize)+blank+ci*StrideSize);
-    if ifrotate
-        temp = imrotate(temp, randangle, 'crop');
-    end
-    temp = temp(:);
-    dataY(i,:) = temp';
+    Yimgcell{i,1} = temp;
     clear temp;
+end
+if ifrotate
+    randangle = 360*rand(m,1);
+end
+parfor i=1:m
+    if ifrotate
+        temp1 = imrotate(Ximgcell{i,1}, randangle(i), 'crop');
+    end
+    dataX(i,:) = temp1(:)';
+    if ifrotate
+        temp1 = imrotate(Yimgcell{i,1}, randangle(i), 'crop');
+    end
+    dataY(i,:) = temp1(:)';
 end
 
 end
