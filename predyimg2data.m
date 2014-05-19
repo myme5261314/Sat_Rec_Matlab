@@ -30,12 +30,14 @@ if ifrotate
     randangle = 360*rand(m,1);
 end
 parfor i=1:m
+    temp1 = Ximgcell{i,1};
     if ifrotate
-        temp1 = imrotate(Ximgcell{i,1}, randangle(i), 'crop');
+        temp1 = imrotate(temp1, randangle(i), 'crop');
     end
     dataX(i,:) = temp1(:)';
+    temp1 = Yimgcell{i,1};
     if ifrotate
-        temp1 = imrotate(Yimgcell{i,1}, randangle(i), 'crop');
+        temp1 = imrotate(temp1, randangle(i), 'crop');
     end
     dataY(i,:) = temp1(:)';
 end
