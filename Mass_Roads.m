@@ -72,7 +72,7 @@ else
     
     testXYimg = params.testXYimg;
     parfor i=1:test_img_num
-        [x, ~] = xyimgIdx2data(data_per_img, WindowSize, StrideSize, testXYimg(i,:));
+        [x, ~] = xyimgIdx2data(WindowSize, StrideSize, testXYimg(i,:));
         x = single(x);
         x = bsxfun(@rdivide, bsxfun(@minus, x, premu), presigma);
         x = x * Ureduce;
@@ -137,7 +137,7 @@ else
     
     trainXYimg = params.trainXYimg;
     parfor i=1:train_img_num
-        [x, ~] = xyimgIdx2data(data_per_img, WindowSize, StrideSize, trainXYimg(i,:));
+        [x, ~] = xyimgIdx2data(WindowSize, StrideSize, trainXYimg(i,:));
         x = single(x);
         x = bsxfun(@rdivide, bsxfun(@minus, x, premu), presigma);
         x = x * Ureduce;
