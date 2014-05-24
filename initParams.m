@@ -25,7 +25,6 @@ else
     params.dataFloder = '/home/cug/Sat_Rec_Dataset/Mass_Roads/';
 end
 params.trainFloder = 'Train';
-params.validFloder = 'Valid';
 params.testFloder = 'Test';
 params.satFloder = 'Sat';
 params.mapFloder = 'Map';
@@ -45,9 +44,6 @@ params.cacheImageNum = 5;
 [params.trainXfile, params.trainYfile] = getDataSetFilePath(...
     params.dataFloder, params.trainFloder, params.satFloder,...
     params.mapFloder);
-[params.validXfile, params.validYfile] = getDataSetFilePath(...
-    params.dataFloder, params.validFloder, params.satFloder,...
-    params.mapFloder);
 [params.testXfile, params.testYfile] = getDataSetFilePath(...
     params.dataFloder, params.testFloder, params.satFloder,...
     params.mapFloder);
@@ -58,8 +54,6 @@ if params.debug
     params.trainXfile = params.trainXfile(1,idx);
     params.trainYfile = params.trainYfile(1,idx);
     idx = 1:5;
-    params.validXfile = params.validXfile(1,idx);
-    params.validYfile = params.validYfile(1,idx);
     params.testXfile = params.testXfile(1,idx);
     params.testYfile = params.testYfile(1,idx);
 end
@@ -68,22 +62,18 @@ params.m = params.trainImgNum * params.data_per_img;
 
 %% Load Img.
 params.trainXYimg = loadXYFile(params.trainXfile, params.trainYfile);
-params.validXYimg = loadXYFile(params.validXfile, params.validYfile);
 params.testXYimg = loadXYFile(params.testXfile, params.testYfile);
 
 %% Load Cached Rotate Angle
 if ~params.restart && exist(params.cachepreRotate, 'file')
     load(params.cachepreRotate);
     params.trainRotate = trainRotate;
-    params.validRotate = validRotate;
     params.testRotate = testRotate;
 else
     trainRotate = 360*rand(params.trainImgNum,1);
-    validRotate = 360*rand( size(params.validXfile, 2), 1 );
     testRotate = 360*rand( size(params.testXfile, 2), 1 );
-    save(params.cachepreRotate, 'trainRotate', 'validRotate', 'testRotate');
+    save(params.cachepreRotate, 'trainRotate', 'testRotate');
     params.trainRotate = trainRotate;
-    params.validRotate = validRotate;
     params.testRotate = testRotate;
 end
 
@@ -91,10 +81,6 @@ end
 % for i=1:params.trainImgNum
 %     params.trainXYimg{i,1} = imrotate(params.trainXYimg{i,1}, params.trainRotate(i));
 %     params.trainXYimg{i,2} = imrotate(params.trainXYimg{i,2}, params.trainRotate(i));
-% end
-% for i=1:size(params.validXfile, 2)
-%     params.validXYimg{i,1} = imrotate(params.validXYimg{i,1}, params.validRotate(i));
-%     params.validXYimg{i,2} = imrotate(params.validXYimg{i,2}, params.validRotate(i));
 % end
 % for i=1:size(params.testXfile, 2)
 %     params.testXYimg{i,1} = imrotate(params.testXYimg{i,1}, params.testRotate(i));
@@ -114,14 +100,6 @@ else
         , params.WindowSize, params.StrideSize);
     datanum_per_img = [datanum_per_img; datanum];
     
-    [validpremu, datanum] = calpreMean(params.validXYimg, params.WindowSize, params.StrideSize);
-    premu = [premu; validpremu];
-    datanum_per_img = [datanum_per_img; datanum];
-    
-    [testpremu, datanum] = calpreMean(params.testXYimg, params.WindowSize, params.StrideSize);
-    premu = [premu; testpremu];
-    datanum_per_img = [datanum_per_img; datanum];
-    
     premu = sum(bsxfun(@times, premu, datanum_per_img))/sum(datanum_per_img);
     params.premu = premu;
     save(params.cachepreMeanFile, 'premu');
@@ -138,14 +116,6 @@ else
     datanum_per_img = [];
     [presigma, datanum] = calpreStd(params.trainXYimg... 
         , params.WindowSize, params.StrideSize, params.premu);
-    datanum_per_img = [datanum_per_img; datanum];
-    
-    [validpresigma, datanum] = calpreStd(params.validXYimg, params.WindowSize, params.StrideSize, params.premu);
-    presigma = [presigma; validpresigma];
-    datanum_per_img = [datanum_per_img; datanum];
-    
-    [testpresigma, datanum] = calpreStd(params.testXYimg, params.WindowSize, params.StrideSize, params.premu);
-    presigma = [presigma; testpresigma];
     datanum_per_img = [datanum_per_img; datanum];
     
     presigma = sum(bsxfun(@times, presigma, datanum_per_img))/sum(datanum_per_img);
@@ -171,16 +141,6 @@ else
     totalnum = 0;
     [sig, totalnum] = calCov(params.trainXYimg... 
         , params.WindowSize, params.StrideSize, params.premu, params.presigma);
-    
-    [validsig, datanum] = calCov(params.validXYimg,...
-        params.WindowSize, params.StrideSize, params.premu, params.presigma);
-    sig = sig + validsig;
-    totalnum = totalnum + datanum;
-    
-    [testsig, datanum] = calCov(params.testXYimg,...
-        params.WindowSize, params.StrideSize, params.premu, params.presigma);
-    sig = sig + testsig;
-    totalnum = totalnum + datanum;
     
     sig = sig/totalnum;
     sig = single(sig);
@@ -212,17 +172,6 @@ else
     [postmu, datanum_per_img] = calpostMean(params.trainXYimg... 
         , params.WindowSize, params.StrideSize...
         , params.premu, params.presigma, params.Ureduce);
-    
-    
-    [validpostmu, datanum] = calpostMean(params.validXYimg, params.WindowSize, params.StrideSize...
-        , params.premu, params.presigma, params.Ureduce);
-    postmu = [postmu; validpostmu];
-    datanum_per_img = [datanum_per_img; datanum];
-
-    [testpostmu, datanum] = calpostMean(params.testXYimg, params.WindowSize, params.StrideSize...
-        , params.premu, params.presigma, params.Ureduce);
-    postmu = [postmu; testpostmu];
-    datanum_per_img = [datanum_per_img; datanum];
 
     postmu = sum(bsxfun(@times, postmu, datanum_per_img))/sum(datanum_per_img);
     params.postmu = postmu;
@@ -241,16 +190,6 @@ else
     [postsigma, datanum_per_img] = calpostStd(params.trainXYimg... 
         , params.WindowSize, params.StrideSize...
         , params.premu, params.presigma, params.Ureduce, params.postmu);
-    
-    [validpostsigma, datanum] = calpostStd(params.validXYimg, params.WindowSize, params.StrideSize...
-        , params.premu, params.presigma, params.Ureduce, params.postmu);
-    postsigma = [postsigma; validpostsigma];
-    datanum_per_img = [datanum_per_img; datanum];
-
-    [testpostsigma, datanum] = calpostStd(params.testXYimg, params.WindowSize, params.StrideSize...
-        , params.premu, params.presigma, params.Ureduce, params.postmu);
-    postsigma = [postsigma; testpostsigma];
-    datanum_per_img = [datanum_per_img; datanum];
     
     postsigma = sum(bsxfun(@times, postsigma, datanum_per_img))/sum(datanum_per_img);
     postsigma = sqrt(postsigma);
