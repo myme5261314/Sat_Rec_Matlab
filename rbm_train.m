@@ -6,6 +6,10 @@ m = params.trainImgNum * data_per_img;
 numbatches = m / opts.batchsize;
 numbatches = floor(numbatches);
 
+gpu_num = gpuDeviceCount();
+n_push = 20;
+n_fetch = 10;
+n_next = 100;
 
 g_premu = gpuArray(rbm.premu);
 g_presigma = gpuArray(rbm.presigma);
@@ -21,24 +25,35 @@ else
     epoch_start = 1;
 end
 
-g_W = gpuArray(rbm.W);
-g_vW = gpuArray(rbm.vW);
-g_c = gpuArray(rbm.c);
-% g_vc = gpuArray(rbm.vc);
-g_b = gpuArray(rbm.b);
-g_vb = gpuArray(single(rbm.vb));
+W = cell(1, gpu_num+1);
+vW = cell(1, gpu_num+1);
+c = cell(1, gpu_num+1);
+b = cell(1, gpu_num+1);
+vb = cell(1, gpu_num+1);
+for i=1:gpu_num+1
+    W{i} = rbm.W;
+    vW{i} = rbm.vW;
+    b{i} = rbm.b;
+    vb{i} = rbm.vb;
+end
+% g_W = gpuArray(rbm.W);
+% g_vW = gpuArray(rbm.vW);
+% g_c = gpuArray(rbm.c);
+% % g_vc = gpuArray(rbm.vc);
+% g_b = gpuArray(rbm.b);
+% g_vb = gpuArray(single(rbm.vb));
 
 g_L2 = gpuArray(single(opts.L2));
 g_batchsize = gpuArray(single(opts.batchsize));
 g_momentum = gpuArray(single(rbm.momentum));
 g_alpha = gpuArray(single(rbm.alpha));
 
-% err = gpuArray(0);
-checkNaN_Inf_flag=1;
-checkNaN_Inf = @(mat) any(any(isinf(mat))) || any(any(isnan(mat)));
-checkThresholdF = @(mat) all(all(abs(mat)>1e30));
+
+
 
 for i = epoch_start : opts.numepochs
+    gpu_no = 1;
+    step = 1;
     [params.imgIdx, params.imgDataIdx] = randIdx(params);
     t1 = tic;
 %         kk = randperm(m);
@@ -64,101 +79,26 @@ for i = epoch_start : opts.numepochs
             [currentPartIdx, g_cacheX, batch, currentIdx] = getNextBatchX(g_cacheX, currentPartIdx, params, opts, currentIdx);
         end
        
-%         batch = gpuArray.rand(g_batchsize, 12288);
-        batch = single(batch);
-        batch = gpuArray(batch);
-       %% Preprocess the Raw Batch X.
-        batch = bsxfun(@rdivide, bsxfun(@minus, batch, g_premu), g_presigma);
-        batch = batch * g_Ureduce;
-        batch = bsxfun(@rdivide, bsxfun(@minus, batch, g_postmu), g_postsigma);
-
-        g_v1 = batch;
-%         if checkNaN_Inf_flag && checkNaN_Inf(g_v1) || checkThresholdF(g_v1)
-%             disp('g_v1 failed!');
-%         end
-        g_h1 = sigm(bsxfun(@plus, g_c, g_v1*g_W));
-        g_c1 = g_v1' * g_h1;
-        g_h1 = single(g_h1 > gpuArray.rand(size(g_h1), 'single'));
-%             g_v2 = sigmrnd(bsxfun(@plus, g_b', g_h1*g_W));
-%             g_v2 = gpuArray(zeros(size(g_v1),'single'));
-%         if checkNaN_Inf_flag && checkNaN_Inf(g_h1) || checkThresholdF(g_h1)
-%             disp('g_h1 failed!');
-%         end
-        g_v2 = bsxfun(@plus, g_b, g_h1*g_W') + gpuArray.randn(size(g_v1));
-        clear g_h1;
-%         if checkNaN_Inf_flag && checkNaN_Inf(g_v2) || checkThresholdF(g_v2)
-%             disp('g_v2 failed!');
-%         end
-        g_h2 = sigm(bsxfun(@plus, g_c, g_v2*g_W));
-%         if checkNaN_Inf_flag && checkNaN_Inf(g_h2) || checkThresholdF(g_h2)
-%             disp('g_h2 failed!');
-%         end
-        
-%         if checkNaN_Inf_flag && checkNaN_Inf(g_v1) || checkThresholdF(g_c1)
-%             disp('g_c1 failed!');
-%         end
-%         g_c2 = g_v2' * g_h2;
-%         clear g_h2;
-%         g_c1 = bsxfun(@minus, g_c1, g_c2);
-        g_c1 = g_c1 - g_v2' * g_h2;
-        clear g_h2;
-%         clear g_c2;
-%         if checkNaN_Inf_flag && checkNaN_Inf(g_c2) || checkThresholdF(g_c2)
-%             disp('g_c2 failed!');
-%         end
-        
-        err_temp = sum(mean((g_v1-g_v2).^2));
-%         if checkNaN_Inf_flag && checkNaN_Inf(err_temp)
-%             disp('err_temp failed!');
-%         end
-%         if isnan(err_temp)
-%             disp(['mini-batch', num2str(l) '/' num2str(numbatches) '.Average reconstruction error: ' num2str(gather(err_temp))]);
-%         end
-            
-
-%         g_vW = bsxfun(@plus, bsxfun(@times, g_vW, g_momentum), bsxfun(@times,...
-%                 bsxfun(@minus, bsxfun(@rdivide, g_c1, g_batchsize),...
-%                 bsxfun(@times, g_W, g_L2)), g_alpha));
-%         g_vW = bsxfun(@times, g_vW, g_momentum);
-%         g_c1 = bsxfun(@rdivide, g_c1, g_batchsize);
-%         g_c1 = bsxfun(@minus, g_c1, bsxfun(@times, g_W, g_L2));
-%         g_c1 = bsxfun(@times, g_c1, g_alpha);
-%         g_vW = bsxfun(@plus, g_vW, g_c1);
-%         g_vW = g_vW * g_momentum;
-%         g_c1 = g_c1/g_batchsize;
-%         g_c1 = g_c1 - g_W * g_L2;
-%         g_c1 = g_alpha * g_c1;
-%         g_vW = g_vW + g_c1;
-%         clear g_c1;
-        g_vW = g_momentum * g_vW;
-        g_c1 = g_c1/g_batchsize;
-        g_vW = g_vW + g_alpha * ( g_c1 - g_L2*g_W );
-        clear g_c1;
-%         if checkNaN_Inf_flag && checkNaN_Inf(g_vW) || checkThresholdF(g_vW)
-%             disp('g_vW failed!');
-%         end
-%         toc;
-        g_vb = g_momentum * g_vb + g_alpha * mean(g_v1 - g_v2);
-        clear g_v1 g_v2;
-%         if checkNaN_Inf_flag && checkNaN_Inf(g_vb) || checkThresholdF(g_vb)
-%             disp('g_vb failed!');
-%         end
-%             g_vc = rbm.momentum * g_vc + rbm.alpha * sum(g_h1 - g_h2)' / opts.batchsize;
-
+        %% Calculate the RBM gradient
+        if mod(step-1, n_fetch)==0
+            W{gpu_no} = W{gpu_num+1};
+            vW{gpu_no} = vW{gpu_num+1};
+            b{gpu_no} = b{gpu_num+1};
+            vb{gpu_no} = vb{gpu_num+1};
+            g_W = gpuArray(W{gpu_no});
+            g_vW = gpuArray(vW{gpu_no});
+            g_b = gpuArray(b{gpu_no});
+            g_vb = gpuArray(vb{gpu_no});
+        end
+        [t_vW, t_vb, err_temp] = calRBMGradient(batch, g_premu, g_presigma, g_Ureduce, g_postmu, g_postsigma, g_W, g_c, g_b, g_L2, g_batchsize, g_alpha);
+        g_vW = g_momentum*g_vW + t_vW;
+        g_vb = g_momentum*g_vb + t_vb;
+        clear t_vW t_vb;
         g_W = g_W + g_vW;
-%         if checkNaN_Inf_flag && checkNaN_Inf(g_W) || checkThresholdF(g_W)
-%             disp('g_W failed!');
-%         end
         g_b = g_b + g_vb;
-%         if checkNaN_Inf_flag && checkNaN_Inf(g_b) || checkThresholdF(g_b)
-%             disp('g_b failed!');
-%         end
-%             g_c = g_c + g_vc;
         batch_err(mod(l,small_batch_debug_size)+1) = err_temp;
         err(l) = err_temp;
-%         if checkNaN_Inf(err)
-%             disp('err failed!');
-%         end
+
         if mod(l,small_batch_debug_size) == 0
             toc;
             nan_num = nnz(isnan(batch_err)|isinf(batch_err));
@@ -172,9 +112,21 @@ for i = epoch_start : opts.numepochs
             batch_err(batch_err==0)=[];
             disp(['Epoch ', num2str(i), '- mini-batch: ', num2str(l) '/' num2str(numbatches) '.Average reconstruction error: ' num2str(gather(mean(batch_err)))]);
         end
-%         err = err + sum(sum((g_v1 - g_v2) .^ 2)) / g_batchsize;
-% %             err = err + gather(sum(sum((g_v1 - g_v2) .^ 2))) / opts.batchsize;
-%         toc;
+        if mod(step-1, n_push)==0
+            vW{gpu_num+1} = g_momentum * vW{gpu_num+1} + gather(g_vW);
+            vb{gpu_num+1} = g_momentum * vb{gpu_num+1} + gather(g_vb);
+            W{gpu_num+1} = W{gpu_num+1} + vW{gpu_num+1};
+            b{gpu_num+1} = b{gpu_num+1} + vb{gpu_num+1};
+            vW{gpu_no} = zeros(size(vW{gpu_no}), 'single');
+            vb{gpu_no} = zeros(size(vb{gpu_no}), 'single');
+            g_vW = gpuArray.zeros(size(g_vW), 'single');
+            g_vb = gpuArray.zeros(size(g_vb), 'single');
+        end
+        
+        if mod(step-1, n_next)==0
+            gpu_no = mod(gpu_no+1, gpu_num) + 1;
+        end   
+        step = step + 1;
 
 
     end
