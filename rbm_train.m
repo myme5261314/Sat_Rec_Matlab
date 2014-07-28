@@ -187,11 +187,11 @@ for i = epoch_start : opts.numepochs
     disp(['epoch ' num2str(i) '/' num2str(opts.numepochs)  '. Average reconstruction error is: ' num2str(gather(mean(err)))]);
 
     rbm.W = W{gpu_num+1};
-    rbm.vW = vW{gpu_num+1};
+    rbm.vW = gather(g_vW);
     rbm.b = b{gpu_num+1};
-    rbm.vb = vb{gpu_num+1};
+    rbm.vb = gather(g_vb);
     rbm.c = c{gpu_num+1};
-    rbm.vc = vc{gpu_num+1};
+    rbm.vc = gather(g_vc);
 %     rbm.W = gather(g_W);
 %     rbm.vW = gather(g_vW);
 %     rbm.c = gather(g_c);
