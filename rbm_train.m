@@ -35,6 +35,7 @@ for i=1:gpu_num+1
     vW{i} = rbm.vW;
     b{i} = rbm.b;
     vb{i} = rbm.vb;
+    c{i} = rbm.c;
 end
 % g_W = gpuArray(rbm.W);
 % g_vW = gpuArray(rbm.vW);
@@ -85,10 +86,12 @@ for i = epoch_start : opts.numepochs
             vW{gpu_no} = vW{gpu_num+1};
             b{gpu_no} = b{gpu_num+1};
             vb{gpu_no} = vb{gpu_num+1};
+            c{gpu_no} = c{gpu_num+1};
             g_W = gpuArray(W{gpu_no});
             g_vW = gpuArray(vW{gpu_no});
             g_b = gpuArray(b{gpu_no});
             g_vb = gpuArray(vb{gpu_no});
+            g_c = gpuArray(c{gpu_no});
         end
         [t_vW, t_vb, err_temp] = calRBMGradient(batch, g_premu, g_presigma, g_Ureduce, g_postmu, g_postsigma, g_W, g_c, g_b, g_L2, g_batchsize, g_alpha);
         g_vW = g_momentum*g_vW + t_vW;
