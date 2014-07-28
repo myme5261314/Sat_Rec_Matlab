@@ -65,6 +65,7 @@ g_alpha = gpuArray(single(rbm.alpha));
 for i = epoch_start : opts.numepochs
     gpu_no = 1;
     step = 1;
+    g_accrued_vW = gpuArray.zeros(size(rbm.W), 'single');
     [params.imgIdx, params.imgDataIdx] = randIdx(params);
     t1 = tic;
 %         kk = randperm(m);
@@ -110,7 +111,8 @@ for i = epoch_start : opts.numepochs
         g_vc = g_momentum*g_vc + t_vc;
         clear t_vW t_vb t_vc;
         g_W = g_W + g_vW;
-        accrued_vW{gpu_no} = accrued_vW{gpu_no} + gather(g_vW);
+        g_accrued_vW = g_accrued_vW + g_vW;
+%         accrued_vW{gpu_no} = accrued_vW{gpu_no} + gather(g_vW);
         g_b = g_b + g_vb;
         accrued_vb{gpu_no} = accrued_vb{gpu_no} + gather(g_vb);
         g_c = g_c + g_vc;
@@ -136,7 +138,8 @@ for i = epoch_start : opts.numepochs
             disp(['Epoch ', num2str(i), '- mini-batch: ', num2str(l) '/' num2str(numbatches) '.Average reconstruction error: ' num2str(gather(mean(batch_err)))]);
         end
         if mod(step-1, n_push)==0
-            W{gpu_num+1} = W{gpu_num+1} + accrued_vW{gpu_no};
+            W{gpu_num+1} = W{gpu_num+1} + gather(g_accrued_vW);
+            g_accrued_vW = gpuArray.zeros(size(rbm.W), 'single');
             accrued_vW{gpu_no} = zeros(size(rbm.W), 'single');
             b{gpu_num+1} = b{gpu_num+1} + accrued_vb{gpu_no};
             accrued_vb{gpu_no} = zeros(size(rbm.b), 'single');
@@ -157,6 +160,7 @@ for i = epoch_start : opts.numepochs
             vW{gpu_no} = gather(g_vW);
             vb{gpu_no} = gather(g_vb);
             vc{gpu_no} = gather(g_vc);
+            accrued_vW{gpu_no} = gather(g_accrued_vW);
             gpu_no = mod(gpu_no+1, gpu_num) + 1;
             g_W = gpuArray(W{gpu_no});
             g_vW = gpuArray(vW{gpu_no});
@@ -164,6 +168,7 @@ for i = epoch_start : opts.numepochs
             g_vb = gpuArray(vb{gpu_no});
             g_c = gpuArray(c{gpu_no});
             g_vc = gpuArray(vc{gpu_no});
+            g_accrued_vW = gpuArray(accrued_vW{gpu_no});
         end   
         step = step + 1;
 
