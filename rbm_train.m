@@ -146,7 +146,7 @@ for i = epoch_start : opts.numepochs
             c{gpu_num+1} = c{gpu_num+1} + accrued_vc{gpu_no};
             accrued_vc{gpu_no} = zeros(size(rbm.c), 'single');
             % Upper Bound
-            c{gpu_num+1}(vc{gpu_num+1}>-4) = -4;
+            c{gpu_num+1}(c{gpu_num+1}>-4) = -4;
 %             vW{gpu_no} = zeros(size(vW{gpu_no}), 'single');
 %             vb{gpu_no} = zeros(size(vb{gpu_no}), 'single');
 %             g_vW = gpuArray.zeros(size(g_vW), 'single');
