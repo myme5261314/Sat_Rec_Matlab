@@ -68,77 +68,11 @@ for i = epoch_start : opts.numepochs
         batch = single(batch);
         batch = gpuArray(batch);
        %% Preprocess the Raw Batch X.
-        batch = bsxfun(@rdivide, bsxfun(@minus, batch, g_premu), g_presigma);
-        batch = batch * g_Ureduce;
-        batch = bsxfun(@rdivide, bsxfun(@minus, batch, g_postmu), g_postsigma);
 
-        g_v1 = batch;
-%         if checkNaN_Inf_flag && checkNaN_Inf(g_v1) || checkThresholdF(g_v1)
-%             disp('g_v1 failed!');
-%         end
-        g_h1 = sigm(bsxfun(@plus, g_c, g_v1*g_W));
-        g_c1 = g_v1' * g_h1;
-        g_h1 = single(g_h1 > gpuArray.rand(size(g_h1), 'single'));
-%             g_v2 = sigmrnd(bsxfun(@plus, g_b', g_h1*g_W));
-%             g_v2 = gpuArray(zeros(size(g_v1),'single'));
-%         if checkNaN_Inf_flag && checkNaN_Inf(g_h1) || checkThresholdF(g_h1)
-%             disp('g_h1 failed!');
-%         end
-        g_v2 = bsxfun(@plus, g_b, g_h1*g_W') + gpuArray.randn(size(g_v1));
-        clear g_h1;
-%         if checkNaN_Inf_flag && checkNaN_Inf(g_v2) || checkThresholdF(g_v2)
-%             disp('g_v2 failed!');
-%         end
-        g_h2 = sigm(bsxfun(@plus, g_c, g_v2*g_W));
-%         if checkNaN_Inf_flag && checkNaN_Inf(g_h2) || checkThresholdF(g_h2)
-%             disp('g_h2 failed!');
-%         end
+        [t_vW, t_vb, err_temp] = calRBMGradient(batch, g_premu, g_presigma, g_Ureduce, g_postmu, g_postsigma, g_W, g_c, g_b, g_L2, g_batchsize, g_alpha);
         
-%         if checkNaN_Inf_flag && checkNaN_Inf(g_v1) || checkThresholdF(g_c1)
-%             disp('g_c1 failed!');
-%         end
-%         g_c2 = g_v2' * g_h2;
-%         clear g_h2;
-%         g_c1 = bsxfun(@minus, g_c1, g_c2);
-        g_c1 = g_c1 - g_v2' * g_h2;
-        clear g_h2;
-%         clear g_c2;
-%         if checkNaN_Inf_flag && checkNaN_Inf(g_c2) || checkThresholdF(g_c2)
-%             disp('g_c2 failed!');
-%         end
-        
-        err_temp = sum(mean((g_v1-g_v2).^2));
-%         if checkNaN_Inf_flag && checkNaN_Inf(err_temp)
-%             disp('err_temp failed!');
-%         end
-%         if isnan(err_temp)
-%             disp(['mini-batch', num2str(l) '/' num2str(numbatches) '.Average reconstruction error: ' num2str(gather(err_temp))]);
-%         end
-            
-
-%         g_vW = bsxfun(@plus, bsxfun(@times, g_vW, g_momentum), bsxfun(@times,...
-%                 bsxfun(@minus, bsxfun(@rdivide, g_c1, g_batchsize),...
-%                 bsxfun(@times, g_W, g_L2)), g_alpha));
-%         g_vW = bsxfun(@times, g_vW, g_momentum);
-%         g_c1 = bsxfun(@rdivide, g_c1, g_batchsize);
-%         g_c1 = bsxfun(@minus, g_c1, bsxfun(@times, g_W, g_L2));
-%         g_c1 = bsxfun(@times, g_c1, g_alpha);
-%         g_vW = bsxfun(@plus, g_vW, g_c1);
-%         g_vW = g_vW * g_momentum;
-%         g_c1 = g_c1/g_batchsize;
-%         g_c1 = g_c1 - g_W * g_L2;
-%         g_c1 = g_alpha * g_c1;
-%         g_vW = g_vW + g_c1;
-%         clear g_c1;
-        g_vW = g_momentum * g_vW;
-        g_c1 = g_c1/g_batchsize;
-        g_vW = g_vW + g_alpha * ( g_c1 - g_L2*g_W );
-        clear g_c1;
-%         if checkNaN_Inf_flag && checkNaN_Inf(g_vW) || checkThresholdF(g_vW)
-%             disp('g_vW failed!');
-%         end
-%         toc;
-        g_vb = g_momentum * g_vb + g_alpha * mean(g_v1 - g_v2);
+        g_vW = g_momentum * g_vW + t_vW;
+        g_vb = g_momentum * g_vb + t_vb;
         clear g_v1 g_v2;
 %         if checkNaN_Inf_flag && checkNaN_Inf(g_vb) || checkThresholdF(g_vb)
 %             disp('g_vb failed!');
