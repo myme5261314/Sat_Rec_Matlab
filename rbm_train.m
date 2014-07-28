@@ -7,9 +7,9 @@ numbatches = m / opts.batchsize;
 numbatches = floor(numbatches);
 
 gpu_num = gpuDeviceCount();
-n_push = 10;
+n_push = 30;
 n_fetch = 50;
-n_next = 100;
+n_next = 10;
 
 g_premu = gpuArray(rbm.premu);
 g_presigma = gpuArray(rbm.presigma);
@@ -136,13 +136,10 @@ for i = epoch_start : opts.numepochs
             disp(['Epoch ', num2str(i), '- mini-batch: ', num2str(l) '/' num2str(numbatches) '.Average reconstruction error: ' num2str(gather(mean(batch_err)))]);
         end
         if mod(step-1, n_push)==0
-            W{gpu_no} = gather(g_W);
             W{gpu_num+1} = W{gpu_num+1} + accrued_vW{gpu_no};
             accrued_vW{gpu_no} = zeros(size(rbm.W), 'single');
-            b{gpu_no} = gather(g_b);
             b{gpu_num+1} = b{gpu_num+1} + accrued_vb{gpu_no};
             accrued_vb{gpu_no} = zeros(size(rbm.b), 'single');
-            c{gpu_no} = gather(g_c);
             c{gpu_num+1} = c{gpu_num+1} + accrued_vc{gpu_no};
             accrued_vc{gpu_no} = zeros(size(rbm.c), 'single');
             % Upper Bound
@@ -154,7 +151,19 @@ for i = epoch_start : opts.numepochs
         end
         
         if mod(step-1, n_next)==0
+            W{gpu_no} = gather(g_W);
+            b{gpu_no} = gather(g_b);
+            c{gpu_no} = gather(g_c);
+            vW{gpu_no} = gather(g_vW);
+            vb{gpu_no} = gather(g_vb);
+            vc{gpu_no} = gather(g_vc);
             gpu_no = mod(gpu_no+1, gpu_num) + 1;
+            g_W = gpuArray(W{gpu_no});
+            g_vW = gpuArray(vW{gpu_no});
+            g_b = gpuArray(b{gpu_no});
+            g_vb = gpuArray(vb{gpu_no});
+            g_c = gpuArray(c{gpu_no});
+            g_vc = gpuArray(vc{gpu_no});
         end   
         step = step + 1;
 
@@ -172,13 +181,18 @@ for i = epoch_start : opts.numepochs
     err(err==0) = [];
     disp(['epoch ' num2str(i) '/' num2str(opts.numepochs)  '. Average reconstruction error is: ' num2str(gather(mean(err)))]);
 
-
-    rbm.W = gather(g_W);
-    rbm.vW = gather(g_vW);
+    rbm.W = W{gpu_num+1};
+    rbm.vW = vW{gpu_num+1};
+    rbm.b = b{gpu_num+1};
+    rbm.vb = vb{gpu_num+1};
+    rbm.c = c{gpu_num+1};
+    rbm.vc = vc{gpu_num+1};
+%     rbm.W = gather(g_W);
+%     rbm.vW = gather(g_vW);
 %     rbm.c = gather(g_c);
 %     rbm.vc = gather(g_vc);
-    rbm.b = gather(g_b);
-    rbm.vb = gather(g_vb);
+%     rbm.b = gather(g_b);
+%     rbm.vb = gather(g_vb);
 
     epoch_cache = i;
     save(params.cacheEpochRBM, 'rbm', 'epoch_cache', '-v7.3');
