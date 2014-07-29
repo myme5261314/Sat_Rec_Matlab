@@ -69,10 +69,11 @@ for i = epoch_start : opts.numepochs
         batch = gpuArray(batch);
        %% Preprocess the Raw Batch X.
 
-        [t_vW, t_vb, err_temp] = calRBMGradient(batch, g_premu, g_presigma, g_Ureduce, g_postmu, g_postsigma, g_W, g_c, g_b, g_L2, g_batchsize, g_alpha);
+        [t_vW, t_vb, t_vc, err_temp] = calRBMGradient(batch, g_premu, g_presigma, g_Ureduce, g_postmu, g_postsigma, g_W, g_c, g_b, g_L2, g_batchsize, g_alpha);
         
         g_vW = g_momentum * g_vW + t_vW;
         g_vb = g_momentum * g_vb + t_vb;
+        g_vc = g_momentum * g_vc + t_vc;
         clear g_v1 g_v2;
 %         if checkNaN_Inf_flag && checkNaN_Inf(g_vb) || checkThresholdF(g_vb)
 %             disp('g_vb failed!');
@@ -84,6 +85,9 @@ for i = epoch_start : opts.numepochs
 %             disp('g_W failed!');
 %         end
         g_b = g_b + g_vb;
+        g_c = g_c + g_vc;
+        % Upper bound for c
+        g_c(g_c>-4) = -4;
 %         if checkNaN_Inf_flag && checkNaN_Inf(g_b) || checkThresholdF(g_b)
 %             disp('g_b failed!');
 %         end
@@ -127,8 +131,8 @@ for i = epoch_start : opts.numepochs
 
     rbm.W = gather(g_W);
     rbm.vW = gather(g_vW);
-%     rbm.c = gather(g_c);
-%     rbm.vc = gather(g_vc);
+    rbm.c = gather(g_c);
+    rbm.vc = gather(g_vc);
     rbm.b = gather(g_b);
     rbm.vb = gather(g_vb);
 
