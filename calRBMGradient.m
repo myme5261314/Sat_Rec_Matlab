@@ -1,4 +1,4 @@
-function [ g_vW, g_vb, err ] = calRBMGradient( batchX, g_premu, g_presigma, g_Ureduce, g_postmu, g_postsigma, g_W, g_c, g_b, g_L2, g_batchsize, g_alpha )
+function [ g_vW, g_vb, g_vc, err ] = calRBMGradient( batchX, g_premu, g_presigma, g_Ureduce, g_postmu, g_postsigma, g_W, g_c, g_b, g_L2, g_batchsize, g_alpha )
 %CALRBMGRADIENT Summary of this function goes here
 %   Detailed explanation goes here
 
@@ -14,10 +14,11 @@ g_h1 = sigm(bsxfun(@plus, g_c, g_v1*g_W));
 g_c1 = g_v1' * g_h1;
 g_h1 = single(g_h1 > gpuArray.rand(size(g_h1), 'single'));
 g_v2 = bsxfun(@plus, g_b, g_h1*g_W') + gpuArray.randn(size(g_v1));
-clear g_h1;
+% clear g_h1;
 g_h2 = sigm(bsxfun(@plus, g_c, g_v2*g_W));
 g_c1 = g_c1 - g_v2' * g_h2;
-clear g_h2;
+% clear g_h2;
+g_vc = g_alpha * mean(g_h1-g_h2);
 
 err = sum(mean((g_v1-g_v2).^2));
 

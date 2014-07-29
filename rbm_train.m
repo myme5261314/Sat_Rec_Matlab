@@ -7,9 +7,9 @@ numbatches = m / opts.batchsize;
 numbatches = floor(numbatches);
 
 gpu_num = gpuDeviceCount();
-n_push = 20;
-n_fetch = 10;
-n_next = 100;
+n_push = 30;
+n_fetch = 50;
+n_next = 10;
 
 g_premu = gpuArray(rbm.premu);
 g_presigma = gpuArray(rbm.presigma);
@@ -26,16 +26,26 @@ else
 end
 
 W = cell(1, gpu_num+1);
-vW = cell(1, gpu_num+1);
+accrued_vW = cell(1, gpu_num);
+vW = cell(1, gpu_num);
 c = cell(1, gpu_num+1);
+accrued_vc = cell(1, gpu_num);
+vc = cell(1, gpu_num);
 b = cell(1, gpu_num+1);
-vb = cell(1, gpu_num+1);
+accrued_vb = cell(1, gpu_num);
+vb = cell(1, gpu_num);
 for i=1:gpu_num+1
     W{i} = rbm.W;
-    vW{i} = rbm.vW;
     b{i} = rbm.b;
-    vb{i} = rbm.vb;
     c{i} = rbm.c;
+    if i~=gpu_num+1
+        vW{i} = rbm.vW;
+        vb{i} = rbm.vb;
+        vc{i} = rbm.vc;
+        accrued_vW{i} = zeros(size(rbm.W), 'single');
+        accrued_vc{i} = zeros(size(rbm.c), 'single');
+        accrued_vb{i} = zeros(size(rbm.b), 'single');
+    end
 end
 % g_W = gpuArray(rbm.W);
 % g_vW = gpuArray(rbm.vW);
@@ -55,6 +65,7 @@ g_alpha = gpuArray(single(rbm.alpha));
 for i = epoch_start : opts.numepochs
     gpu_no = 1;
     step = 1;
+    g_accrued_vW = gpuArray.zeros(size(rbm.W), 'single');
     [params.imgIdx, params.imgDataIdx] = randIdx(params);
     t1 = tic;
 %         kk = randperm(m);
@@ -83,22 +94,33 @@ for i = epoch_start : opts.numepochs
         %% Calculate the RBM gradient
         if mod(step-1, n_fetch)==0
             W{gpu_no} = W{gpu_num+1};
-            vW{gpu_no} = vW{gpu_num+1};
+%             vW{gpu_no} = vW{gpu_num+1};
             b{gpu_no} = b{gpu_num+1};
-            vb{gpu_no} = vb{gpu_num+1};
+%             vb{gpu_no} = vb{gpu_num+1};
             c{gpu_no} = c{gpu_num+1};
             g_W = gpuArray(W{gpu_no});
             g_vW = gpuArray(vW{gpu_no});
             g_b = gpuArray(b{gpu_no});
             g_vb = gpuArray(vb{gpu_no});
             g_c = gpuArray(c{gpu_no});
+            g_vc = gpuArray(vc{gpu_no});
         end
-        [t_vW, t_vb, err_temp] = calRBMGradient(batch, g_premu, g_presigma, g_Ureduce, g_postmu, g_postsigma, g_W, g_c, g_b, g_L2, g_batchsize, g_alpha);
+        [t_vW, t_vb, t_vc, err_temp] = calRBMGradient(batch, g_premu, g_presigma, g_Ureduce, g_postmu, g_postsigma, g_W, g_c, g_b, g_L2, g_batchsize, g_alpha);
         g_vW = g_momentum*g_vW + t_vW;
         g_vb = g_momentum*g_vb + t_vb;
-        clear t_vW t_vb;
+        g_vc = g_momentum*g_vc + t_vc;
+        clear t_vW t_vb t_vc;
         g_W = g_W + g_vW;
+        g_accrued_vW = g_accrued_vW + g_vW;
+%         accrued_vW{gpu_no} = accrued_vW{gpu_no} + gather(g_vW);
         g_b = g_b + g_vb;
+        accrued_vb{gpu_no} = accrued_vb{gpu_no} + gather(g_vb);
+        g_c = g_c + g_vc;
+        temp = g_c+4;
+        temp(temp>0) = 0;
+        accrued_vc{gpu_no} = accrued_vc{gpu_no} + gather(g_vc) - temp;
+        % Upper bound for c
+        g_c(g_c>-4) = -4;
         batch_err(mod(l,small_batch_debug_size)+1) = err_temp;
         err(l) = err_temp;
 
@@ -116,18 +138,37 @@ for i = epoch_start : opts.numepochs
             disp(['Epoch ', num2str(i), '- mini-batch: ', num2str(l) '/' num2str(numbatches) '.Average reconstruction error: ' num2str(gather(mean(batch_err)))]);
         end
         if mod(step-1, n_push)==0
-            vW{gpu_num+1} = g_momentum * vW{gpu_num+1} + gather(g_vW);
-            vb{gpu_num+1} = g_momentum * vb{gpu_num+1} + gather(g_vb);
-            W{gpu_num+1} = W{gpu_num+1} + vW{gpu_num+1};
-            b{gpu_num+1} = b{gpu_num+1} + vb{gpu_num+1};
-            vW{gpu_no} = zeros(size(vW{gpu_no}), 'single');
-            vb{gpu_no} = zeros(size(vb{gpu_no}), 'single');
-            g_vW = gpuArray.zeros(size(g_vW), 'single');
-            g_vb = gpuArray.zeros(size(g_vb), 'single');
+            W{gpu_num+1} = W{gpu_num+1} + gather(g_accrued_vW);
+            g_accrued_vW = gpuArray.zeros(size(rbm.W), 'single');
+            accrued_vW{gpu_no} = zeros(size(rbm.W), 'single');
+            b{gpu_num+1} = b{gpu_num+1} + accrued_vb{gpu_no};
+            accrued_vb{gpu_no} = zeros(size(rbm.b), 'single');
+            c{gpu_num+1} = c{gpu_num+1} + accrued_vc{gpu_no};
+            accrued_vc{gpu_no} = zeros(size(rbm.c), 'single');
+            % Upper Bound
+            c{gpu_num+1}(c{gpu_num+1}>-4) = -4;
+%             vW{gpu_no} = zeros(size(vW{gpu_no}), 'single');
+%             vb{gpu_no} = zeros(size(vb{gpu_no}), 'single');
+%             g_vW = gpuArray.zeros(size(g_vW), 'single');
+%             g_vb = gpuArray.zeros(size(g_vb), 'single');
         end
         
         if mod(step-1, n_next)==0
+            W{gpu_no} = gather(g_W);
+            b{gpu_no} = gather(g_b);
+            c{gpu_no} = gather(g_c);
+            vW{gpu_no} = gather(g_vW);
+            vb{gpu_no} = gather(g_vb);
+            vc{gpu_no} = gather(g_vc);
+            accrued_vW{gpu_no} = gather(g_accrued_vW);
             gpu_no = mod(gpu_no+1, gpu_num) + 1;
+            g_W = gpuArray(W{gpu_no});
+            g_vW = gpuArray(vW{gpu_no});
+            g_b = gpuArray(b{gpu_no});
+            g_vb = gpuArray(vb{gpu_no});
+            g_c = gpuArray(c{gpu_no});
+            g_vc = gpuArray(vc{gpu_no});
+            g_accrued_vW = gpuArray(accrued_vW{gpu_no});
         end   
         step = step + 1;
 
@@ -145,13 +186,18 @@ for i = epoch_start : opts.numepochs
     err(err==0) = [];
     disp(['epoch ' num2str(i) '/' num2str(opts.numepochs)  '. Average reconstruction error is: ' num2str(gather(mean(err)))]);
 
-
-    rbm.W = gather(g_W);
+    rbm.W = W{gpu_num+1};
     rbm.vW = gather(g_vW);
+    rbm.b = b{gpu_num+1};
+    rbm.vb = gather(g_vb);
+    rbm.c = c{gpu_num+1};
+    rbm.vc = gather(g_vc);
+%     rbm.W = gather(g_W);
+%     rbm.vW = gather(g_vW);
 %     rbm.c = gather(g_c);
 %     rbm.vc = gather(g_vc);
-    rbm.b = gather(g_b);
-    rbm.vb = gather(g_vb);
+%     rbm.b = gather(g_b);
+%     rbm.vb = gather(g_vb);
 
     epoch_cache = i;
     save(params.cacheEpochRBM, 'rbm', 'epoch_cache', '-v7.3');
