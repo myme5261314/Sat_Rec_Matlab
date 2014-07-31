@@ -24,7 +24,7 @@ end
 g_W = gpuArray(rbm.W);
 g_vW = gpuArray(rbm.vW);
 g_c = gpuArray(rbm.c);
-% g_vc = gpuArray(rbm.vc);
+g_vc = gpuArray(rbm.vc);
 g_b = gpuArray(rbm.b);
 g_vb = gpuArray(single(rbm.vb));
 
