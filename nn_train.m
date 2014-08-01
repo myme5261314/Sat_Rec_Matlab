@@ -52,93 +52,18 @@ for i = epoch_start : numepochs
             [currentPartIdx, g_cacheX, g_cacheY, batchX, batchY, currentIdx] = getNextBatchX(g_cacheX, g_cacheY, currentPartIdx, params, opts, currentIdx);
         end
         
-       %% Preprocess the Raw Batch X.
-        batchX = gpuArray(single(batchX));
-        batchY = gpuArray(single(batchY));
-        batchX = bsxfun(@rdivide, bsxfun(@minus, batchX, g_premu), g_presigma);
-        batchX = batchX * g_Ureduce;
-        batchX = bsxfun(@rdivide, bsxfun(@minus, batchX, g_postmu), g_postsigma);
-        batchY = single(batchY==255);
-       %% Perform forward propogation.
-        batchX = [ gpuArray.ones(g_batchsize,1, 'single') batchX ];
-        Z2 = g_Theta1 * batchX';
+        %% Calculate the gradient.
+        [t_vTheta1, t_vTheta2, t_error] = calNNGradient( batchX, batchY, g_premu, g_presigma, g_Ureduce, g_postmu, g_postsigma, g_Theta1, g_Theta2 );
 
-        A2 = sigm( Z2 );
-        A2 = [ gpuArray.ones(1,size(A2,2), 'single') ; A2 ];
-        Z2 = [ gpuArray.ones(1,size(Z2,2), 'single') ; Z2 ];
-        hx = sigm( g_Theta2 * A2 );
-
-%         J = sum(sum( Y_trans .* log(hx)' + (1-Y_trans) .* log(1-hx)' ))/-m;
-%         temp1 = g_Theta1(:,2:end).^2;
-%         temp1 = sum(sum(temp1));
-%         temp2 = g_Theta2(:,2:end).^2;
-%         temp2 = sum(sum(temp2));
-%         J = J + (temp1 + temp2)*lambda/2/m;
-        % J = J + ( sum(sum(Theta1(:,2:end).^2)) + sum(sum(Theta2(:,2:end).^2)) )*lambda/2/m;
-       %% Perform Back Propgation.
-       	Y_trans = batchY;
-        delta3 = hx - Y_trans';
-        clear  Y_trans batchY;
-        clear hx;
-        delta2 = g_Theta2'*delta3 .* sigmoidGradient(Z2);
-        clear Z2;
-
-        delta2 = delta2(2:end,:);
-        %delta3 = delta3(2:end);
-
-        % Theta1_grad = (Theta1_grad + delta2*X)/m;
-        % Theta2_grad = (Theta2_grad + delta3*A2')/m;
         %% Update the Theta.
         
         
-        err(l,1) = sum(sum(delta3.^2));
-        g_Theta1_grad = delta2*batchX;
-        g_Theta2_grad = delta3*A2';
-        g_vTheta1 = g_momentum*g_vTheta1 + g_alpha*(g_Theta1_grad/g_batchsize + g_L2*[gpuArray.zeros(size(g_Theta1,1),1,'single') g_Theta1(:,2:end)]);
+        err(l,1) = t_error;
+
+        g_vTheta1 = g_momentum*g_vTheta1 + g_alpha*(t_vTheta1/g_batchsize + g_L2*[gpuArray.zeros(size(g_Theta1,1),1,'single') g_Theta1(:,2:end)]);
         g_Theta1 = g_Theta1 - g_vTheta1;
-        g_vTheta2 = g_momentum*g_vTheta2 + g_alpha*(g_Theta2_grad/g_batchsize + g_L2*[gpuArray.zeros(size(g_Theta2,1),1,'single') g_Theta2(:,2:end)]);
+        g_vTheta2 = g_momentum*g_vTheta2 + g_alpha*(t_vTheta2/g_batchsize + g_L2*[gpuArray.zeros(size(g_Theta2,1),1,'single') g_Theta2(:,2:end)]);
         g_Theta2 = g_Theta2 - g_vTheta2;
-%         g_Theta2_grad = delta3*A2'/g_batchsize;
-%         clear  delta3 A2;
-% %         wait(gpu);
-%         g_Theta2_grad = g_alpha*(g_Theta2_grad/g_batchsize + g_L2* [gpuArray.zeros(size(g_Theta2,1),1,'single') g_Theta2(:,2:end)]);
-%         g_vTheta2 = g_vTheta2*g_momentum + g_Theta2_grad;
-%         g_Theta2 = g_Theta2 - g_vTheta2;
-%         clear g_Theta2_grad;
-% %         wait(gpu);
-%         g_vTheta1 = g_vTheta1*g_momentum;
-%         g_Theta1_grad = delta2*batchX;
-% %         g_Theta1_grad = g_Theta1_grad/g_batchsize;
-% %         g_Theta1_grad = delta2*batchX/g_batchsize;
-% %         disp(gpu.FreeMemory);
-%         clear batchX delta2;
-% %         disp(gpu.FreeMemory);
-% %         wait(gpu);
-%         g_Theta1_grad = g_Theta1_grad * (g_alpha/g_batchsize);
-%         g_temp = gpuArray.zeros(size(g_Theta1),'single');
-%         g_temp(:,2:end) = g_Theta1(:,2:end);
-% %         g_temp = [gpuArray.zeros(size(g_Theta1,1),1) g_Theta1(:,2:end)];
-% %         g_temp = g_Theta1;
-% %         g_temp(:,1) = 0;
-%         g_temp = g_temp * (g_alpha*g_L2);
-%         g_Theta1_grad = g_Theta1_grad + g_temp;
-%         clear g_temp;
-% %         wait(gpu);
-% %         g_vTheta1 = g_vTheta1*g_momentum;
-%         g_vTheta1 = g_vTheta1 + g_Theta1_grad;
-%         clear g_Theta1_grad;
-% %         wait(gpu);
-%         
-% %         g_Theta1_grad = g_alpha*(g_Theta1_grad/g_batchsize + g_L2* [gpuArray.zeros(size(g_Theta1,1),1,'single') g_Theta1(:,2:end)]);
-% %         g_vTheta1 = g_vTheta1*g_momentum + g_Theta1_grad;
-%         g_Theta1 = g_Theta1 - g_vTheta1;
-
-
-       
-%         toc;
-        
-        
-%         wait(gpu);
         
     end
     t = toc;
