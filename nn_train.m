@@ -9,6 +9,14 @@ m = params.trainImgNum * data_per_img;
 numbatches = m / opts.batchsize;
 numbatches = floor(numbatches);
 
+gpu_num = gpuDeviceCount();
+if gpu_num==1
+    gpu_num=2;
+end
+n_push = 30;
+n_fetch = 50;
+n_next = 10;
+
 g_alpha = gpuArray(single(nn.alpha));
 g_momentum = gpuArray(single(nn.momentum));
 g_L2 = gpuArray(single(nn.L2));
@@ -28,14 +36,36 @@ else
     epoch_start = 1;
 end
 
-g_Theta1 = gpuArray(nn.Theta1);
-g_Theta2 = gpuArray(nn.Theta2);
-g_vTheta1 = gpuArray(nn.vTheta1);
-g_vTheta2 = gpuArray(nn.vTheta2);
+Theta1 = cell(1, gpu_num+1);
+accrued_vTheta1 = cell(1, gpu_num);
+Theta2 = cell(1, gpu_num+1);
+accrued_vTheta2 = cell(1, gpu_num);
+vTheta1 = cell(1, gpu_num);
+vTheta2 = cell(1, gpu_num);
+
+for i=1:gpu_num+1
+    Theta1{i} = nn.Theta1;
+    Theta2{i} = nn.Theta2;
+    if i~=gpu_num+1
+        vTheta1{i} = nn.vTheta1;
+        vTheta2{i} = rbm.vTheta2;
+        accrued_vTheta1{i} = zeros(size(nn.Theta1), 'single');
+        accrued_vTheta2{i} = zeros(size(nn.Theta2), 'single');
+    end
+end
+% g_Theta1 = gpuArray(nn.Theta1);
+% g_Theta2 = gpuArray(nn.Theta2);
+% g_vTheta1 = gpuArray(nn.vTheta1);
+% g_vTheta2 = gpuArray(nn.vTheta2);
 
 % gpu = gpuDevice();
 
 for i = epoch_start : numepochs
+    gpu_no = 1;
+    step = 1;
+    g_accrued_vTheta1 = gpuArray.zeros(size(nn.Theta1), 'single');
+    g_accrued_vTheta2 = gpuArray.zeros(size(rbm.Theta2), 'single');
+    
     tic;
     err = gpuArray.zeros(2*numbatches, 1);
     %% cache X from one img and transfer it to GPU.
@@ -52,18 +82,54 @@ for i = epoch_start : numepochs
             [currentPartIdx, g_cacheX, g_cacheY, batchX, batchY, currentIdx] = getNextBatchX(g_cacheX, g_cacheY, currentPartIdx, params, opts, currentIdx);
         end
         
+        %% Fetch from server
+        if mod(step-1, n_fetch)==0
+            Theta1{gpu_no} = Theta1{gpu_num+1};
+            Theta2{gpu_no} = Theta2{gpu_num+1};
+            g_Theta1 = gpuArray(Theta1{gpu_no});
+            g_vTheta1 = gpuArray(vTheta1{gpu_no});
+            g_Theta2 = gpuArray(Theta2{gpu_no});
+            g_vTheta2 = gpuArray(vTheta2{gpu_no});
+        end
+        
         %% Calculate the gradient.
         [t_vTheta1, t_vTheta2, t_error] = calNNGradient( batchX, batchY, g_premu, g_presigma, g_Ureduce, g_postmu, g_postsigma, g_Theta1, g_Theta2 );
 
         %% Update the Theta.
-        
-        
         err(l,1) = t_error;
-
         g_vTheta1 = g_momentum*g_vTheta1 + g_alpha*(t_vTheta1/g_batchsize + g_L2*[gpuArray.zeros(size(g_Theta1,1),1,'single') g_Theta1(:,2:end)]);
         g_Theta1 = g_Theta1 - g_vTheta1;
+        g_accrued_vTheta1 = g_accrued_vTheta1 - g_vTheta1;
         g_vTheta2 = g_momentum*g_vTheta2 + g_alpha*(t_vTheta2/g_batchsize + g_L2*[gpuArray.zeros(size(g_Theta2,1),1,'single') g_Theta2(:,2:end)]);
         g_Theta2 = g_Theta2 - g_vTheta2;
+        g_accrued_vTheta2 = g_accrued_vTheta2 - g_vTheta2;
+        
+        %% Push to server.
+        if mod(step-1, n_push)==0
+            Theta1{gpu_num+1} = Theta1{gpu_num+1} + gather(g_accrued_vTheta1);
+            g_accrued_vTheta1 = gpuArray.zeros(size(nn.Theta1), 'single');
+            Theta2{gpu_num+1} = Theta2{gpu_num+1} + gather(g_accrued_vTheta2);
+            g_accrued_vTheta2 = gpuArray.zeros(size(nn.Theta2), 'single');
+            accrued_vTheta1{gpu_no} = zeros(size(rbm.Theta1), 'single');
+            accrued_vTheta2{gpu_no} = zeros(size(rbm.Theta2), 'single');
+        end
+        %% Switch to the next gpu(simulate).
+        if mod(step-1, n_next)==0
+            Theta1{gpu_no} = gather(g_Theta1);
+            Theta2{gpu_no} = gather(g_Theta2);
+            vTheta1{gpu_no} = gather(g_vTheta1);
+            vTheta2{gpu_no} = gather(g_vTheta2);
+            accrued_vTheta1{gpu_no} = gather(g_accrued_vTheta1);
+            accrued_vTheta2{gpu_no} = gather(g_accrued_vTheta2);
+            gpu_no = mod(gpu_no+1, gpu_num) + 1;    %switch
+            g_Theta1 = gpuArray(Theta1{gpu_no});
+            g_Theta2 = gpuArray(Theta2{gpu_no});
+            g_vTheta1 = gpuArray(vTheta1{gpu_no});
+            g_vTheta2 = gpuArray(vTheta2{gpu_no});
+            g_accrued_vTheta1 = gpuArray(accrued_vTheta1{gpu_no});
+            g_accrued_vTheta2 = gpuArray(accrued_vTheta2{gpu_no});
+        end   
+        step = step + 1;
         
     end
     t = toc;

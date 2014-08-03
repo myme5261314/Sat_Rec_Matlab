@@ -91,7 +91,7 @@ for i = epoch_start : opts.numepochs
             [currentPartIdx, g_cacheX, batch, currentIdx] = getNextBatchX(g_cacheX, currentPartIdx, params, opts, currentIdx);
         end
        
-        %% Calculate the RBM gradient
+        %% Fetch from server
         if mod(step-1, n_fetch)==0
             W{gpu_no} = W{gpu_num+1};
 %             vW{gpu_no} = vW{gpu_num+1};
@@ -105,7 +105,9 @@ for i = epoch_start : opts.numepochs
             g_c = gpuArray(c{gpu_no});
             g_vc = gpuArray(vc{gpu_no});
         end
+        %% Calculate the RBM gradient
         [t_vW, t_vb, t_vc, err_temp] = calRBMGradient(batch, g_premu, g_presigma, g_Ureduce, g_postmu, g_postsigma, g_W, g_c, g_b, g_L2, g_batchsize, g_alpha);
+        %% Update parameters.
         g_vW = g_momentum*g_vW + t_vW;
         g_vb = g_momentum*g_vb + t_vb;
         g_vc = g_momentum*g_vc + t_vc;
@@ -137,6 +139,7 @@ for i = epoch_start : opts.numepochs
             batch_err(batch_err==0)=[];
             disp(['Epoch ', num2str(i), '- mini-batch: ', num2str(l) '/' num2str(numbatches) '.Average reconstruction error: ' num2str(gather(mean(batch_err)))]);
         end
+        %% Push to server
         if mod(step-1, n_push)==0
             W{gpu_num+1} = W{gpu_num+1} + gather(g_accrued_vW);
             g_accrued_vW = gpuArray.zeros(size(rbm.W), 'single');
@@ -152,7 +155,7 @@ for i = epoch_start : opts.numepochs
 %             g_vW = gpuArray.zeros(size(g_vW), 'single');
 %             g_vb = gpuArray.zeros(size(g_vb), 'single');
         end
-        
+        %% Switch to the next gpu(simulate).
         if mod(step-1, n_next)==0
             W{gpu_no} = gather(g_W);
             b{gpu_no} = gather(g_b);
