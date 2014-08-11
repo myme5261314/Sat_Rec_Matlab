@@ -112,7 +112,7 @@ else
     save(params.cacheTestYmetric, 'testprecision', 'testrecall');
 end
 [p, r] = getBestPrecisionRecall(testprecision, testrecall);
-disp(['The best precision: ', num2str(p), '. And the best recall: ', num2str(r), '.']);
+disp(['The best precision: ', num2str(p), '. And the best recall: ', num2str(r), ', the best f1: ', num2str(p*r*2/(p+r))]);
 toc;
 
 figure('Name', 'Test Set');
@@ -179,12 +179,13 @@ else
         predtrainyimgcell = predyimgcell;
     end
     thresholdlist_new = (0:1e-2:1)';
+    blank = (params.WindowSize-params.StrideSize)/2;
     [trainprecision, trainrecall] = cal_precision_recall(blank, predyimgcell, params.trainXYimg(:,2), thresholdlist_new);
     save(params.cacheTrainYmetric, 'trainprecision', 'trainrecall');
 end
 
-[p, r] = getBestPrecisionRecall(trainprecision, trainprecision);
-disp(['The best precision: ', num2str(p), '. And the best recall: ', num2str(r), '.']);
+[p, r] = getBestPrecisionRecall(trainprecision, trainrecall);
+disp(['The best precision: ', num2str(p), '. And the best recall: ', num2str(r), ', the best f1: ', num2str(p*r*2/(p+r))]);
 toc;
 
 figure('Name', 'Train Set');
@@ -273,7 +274,7 @@ else
 end
 toc;
 
-disp('Start TestSet precision and recall Stage');
+disp('Start Post-process TestSet precision and recall Stage');
 tic;
 if ~params.restart && exist(params.cachePostTestYmetric, 'file')
     load(params.cachePostTestYmetric);
@@ -288,10 +289,10 @@ else
     save(params.cachePostTestYmetric, 'posttestprecision', 'posttestrecall');
 end
 [p, r] = getBestPrecisionRecall(posttestprecision, posttestrecall);
-disp(['The best precision: ', num2str(p), '. And the best recall: ', num2str(r), '.']);
+disp(['The best precision: ', num2str(p), '. And the best recall: ', num2str(r), ', the best f1: ', num2str(p*r*2/(p+r))]);
 toc;
 
-figure('Name', 'Test Set');
+figure('Name', 'Post-process Test Set');
 plot(posttestrecall, posttestprecision);
 
 matlabpool close;
