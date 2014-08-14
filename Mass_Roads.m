@@ -198,6 +198,8 @@ save('precision_recall_rbm.mat', 'trainprecision', 'trainrecall', 'testprecision
 %% Post-Process
 if ~params.restart && exist(params.cachePostNN, 'file')
     load(params.cachePostNN);
+    load(params.cachePostNNMu);
+    load(params.cachePostNNSigma);
 else
     if ~exist('predtrainyimgcell', 'var')
         data_per_img = params.data_per_img;
