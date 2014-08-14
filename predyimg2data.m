@@ -28,6 +28,8 @@ for i=1:m
 end
 if ifrotate
     randangle = 360*rand(m,1);
+else
+    randangle = zeros(m,1);
 end
 parfor i=1:m
     temp1 = Ximgcell{i,1};
