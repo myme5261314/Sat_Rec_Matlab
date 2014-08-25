@@ -23,7 +23,7 @@ g_vc = g_alpha * mean(g_h1-g_h2);
 err = sum(mean((g_v1-g_v2).^2));
 
 g_c1 = g_c1/g_batchsize;
-g_vW = g_c1 - g_L2*g_W;
+g_vW = g_alpha * ( g_c1 - g_L2*g_W );
 clear g_c1;
 g_vb = g_alpha * mean(g_v1 - g_v2);
 clear g_v1 g_v2;
