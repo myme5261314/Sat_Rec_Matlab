@@ -301,6 +301,8 @@ plot(posttestrecall, posttestprecision);
 
 matlabpool close;
 
+disp(['Program Finish at ', datestr(now)]);
+
 end
 
 function [ p, r ] = getBestPrecisionRecall(precision, recall)
