@@ -193,7 +193,7 @@ plot(trainrecall, trainprecision);
 
 
 
-save('precision_recall_rbm.mat', 'trainprecision', 'trainrecall', 'testprecision', 'testrecall');
+save(fullfile(params.cacheFloder, 'precision_recall_rbm.mat'), 'trainprecision', 'trainrecall', 'testprecision', 'testrecall');
 
 %% Post-Process
 if ~params.restart && exist(params.cachePostNN, 'file')
@@ -293,6 +293,8 @@ end
 [p, r] = getBestPrecisionRecall(posttestprecision, posttestrecall);
 disp(['The best precision: ', num2str(p), '. And the best recall: ', num2str(r), ', the best f1: ', num2str(p*r*2/(p+r))]);
 toc;
+
+save(fullfile(params.cacheFloder, 'precision_recall_post.mat'), 'posttestprecision', 'posttestrecall');
 
 figure('Name', 'Post-process Test Set');
 plot(posttestrecall, posttestprecision);
